@@ -19,21 +19,21 @@
   <meta name="author" content="Bei">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+    <meta name="description" content="编译器需要写C文件和汇编文件，C文件利用GCC编译，汇编文件用NASM编译 GCC编译器GCC（GNU Compiler Collection）是一个由GNU项目开发和维护的编译器集合，它支持多种编程语言，包括C、C++、Objective-C、Fortran、Ada和Go等。 我们利用GCC将c文件经过预处理、编译、汇编生成目标文件.o文件，.o文件包含了编译器生成的机器代码，但尚未被链接成最终">
 <meta property="og:type" content="article">
-<meta property="og:title" content="系统命令">
-<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2024/12/18/hello-world/index.html">
+<meta property="og:title" content="“从零搭建操作系统” 第一章 环境部署">
+<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2024/12/21/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E4%B8%80%E7%AB%A0%20%E7%8E%AF%E5%A2%83%E9%83%A8%E7%BD%B2/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+<meta property="og:description" content="编译器需要写C文件和汇编文件，C文件利用GCC编译，汇编文件用NASM编译 GCC编译器GCC（GNU Compiler Collection）是一个由GNU项目开发和维护的编译器集合，它支持多种编程语言，包括C、C++、Objective-C、Fortran、Ada和Go等。 我们利用GCC将c文件经过预处理、编译、汇编生成目标文件.o文件，.o文件包含了编译器生成的机器代码，但尚未被链接成最终">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2024-12-18T06:18:57.521Z">
-<meta property="article:modified_time" content="2024-12-18T08:16:11.603Z">
+<meta property="article:published_time" content="2024-12-21T09:05:40.000Z">
+<meta property="article:modified_time" content="2024-12-21T09:51:21.812Z">
 <meta property="article:author" content="Bei">
 <meta name="twitter:card" content="summary_large_image">
   
   
   
-  <title>系统命令 - Hexo</title>
+  <title>“从零搭建操作系统” 第一章 环境部署 - Hexo</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -199,7 +199,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="系统命令"></span>
+            <span id="subtitle" data-typed-text="“从零搭建操作系统” 第一章 环境部署"></span>
           
         </div>
 
@@ -210,8 +210,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-12-18 14:18" pubdate>
-          2024年12月18日 下午
+        <time datetime="2024-12-21 17:05" pubdate>
+          2024年12月21日 下午
         </time>
       </span>
     
@@ -222,7 +222,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          18 字
+          378 字
         
       </span>
     
@@ -233,7 +233,7 @@
         
         
         
-          1 分钟
+          4 分钟
         
       </span>
     
@@ -270,24 +270,22 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">系统命令</h1>
+            <h1 id="seo-header">“从零搭建操作系统” 第一章 环境部署</h1>
             
             
               <div class="markdown-body">
                 
-                <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo new <span class="hljs-string">&quot;My New Post&quot;</span><br></code></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo server<br></code></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo generate<br></code></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo deploy<br></code></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+                <h2 id="编译器"><a href="#编译器" class="headerlink" title="编译器"></a>编译器</h2><p>需要写C文件和汇编文件，C文件利用GCC编译，汇编文件用NASM编译</p>
+<h3 id="GCC编译器"><a href="#GCC编译器" class="headerlink" title="GCC编译器"></a>GCC编译器</h3><p>GCC（GNU Compiler Collection）是一个由GNU项目开发和维护的编译器集合，它支持多种编程语言，包括C、C++、Objective-C、Fortran、Ada和Go等。</p>
+<p>我们利用GCC将c文件经过预处理、编译、汇编生成目标文件.o文件，.o文件包含了编译器生成的机器代码，但尚未被链接成最终的可执行文件。</p>
+<h3 id="NASM编译器"><a href="#NASM编译器" class="headerlink" title="NASM编译器"></a>NASM编译器</h3><p>NASM（Netwide Assembler）是一个开源的汇编器，主要用于编写和编译x86和x86-64架构的汇编代码。它以其简洁的语法、易用性和对新处理器指令的支持而闻名。</p>
+<p>我们利用nasm将.S汇编文件汇编成目标文件.o文件。</p>
+<h2 id="虚拟机"><a href="#虚拟机" class="headerlink" title="虚拟机"></a>虚拟机</h2><p>利用Vmware装Ubuntu系统，在Ubuntu上进行开发</p>
+<h2 id="硬件模拟器Bochs"><a href="#硬件模拟器Bochs" class="headerlink" title="硬件模拟器Bochs"></a>硬件模拟器Bochs</h2><p>Bochs是一个开源的x86硬件模拟器，它能够模拟整个PC硬件环境，包括CPU、内存、显卡、硬盘、网络等设备</p>
+<p>利用Bochs配置硬件环境，可以在bochsrc的配置文件里进行配置，如内存大小</p>
+<p>Bochs另一个重要功能是创建虚拟硬盘，操作系统无论如何也是存储在硬盘上的，因此肯定需要一个虚拟硬盘作为载体。</p>
+<p>应该也可以用qemu，但我不会</p>
+<h2 id="远程开发Vscode"><a href="#远程开发Vscode" class="headerlink" title="远程开发Vscode"></a>远程开发Vscode</h2><p>利用windows环境下的vscode，远程ssh连接虚拟机上的Ubuntu系统，方便开发。</p>
 
                 
               </div>
@@ -306,7 +304,7 @@
     
       <span class="category-chain">
         
-  <a href="/categories/Hexo%E7%9B%B8%E5%85%B3/" class="category-chain-item">Hexo相关</a>
+  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="category-chain-item">从零搭建操作系统</a>
   
   
 
@@ -326,8 +324,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>系统命令</div>
-      <div>https://yigefanqie-beiyi.github.io/2024/12/18/hello-world/</div>
+      <div>“从零搭建操作系统” 第一章 环境部署</div>
+      <div>https://yigefanqie-beiyi.github.io/2024/12/21/“从零搭建操作系统” 第一章 环境部署/</div>
     </div>
     <div class="license-meta">
       
@@ -339,7 +337,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2024年12月18日</div>
+          <div>2024年12月21日</div>
         </div>
       
       
@@ -371,15 +369,15 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2024/12/21/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E8%AE%B0%E5%BD%95%E2%80%9D/" title="“从零搭建操作系统” 记录">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">“从零搭建操作系统” 记录</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
+                    
+                      <a href="/2024/12/21/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E8%AE%B0%E5%BD%95%E2%80%9D/" title="“从零搭建操作系统” 记录">
+                        <span class="hidden-mobile">“从零搭建操作系统” 记录</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
                     
                   </article>
                 </div>

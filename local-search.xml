@@ -4,6 +4,44 @@
   
   
   <entry>
+    <title>“从零搭建操作系统” 第一章 环境部署</title>
+    <link href="/2024/12/21/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E4%B8%80%E7%AB%A0%20%E7%8E%AF%E5%A2%83%E9%83%A8%E7%BD%B2/"/>
+    <url>/2024/12/21/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E4%B8%80%E7%AB%A0%20%E7%8E%AF%E5%A2%83%E9%83%A8%E7%BD%B2/</url>
+    
+    <content type="html"><![CDATA[<h2 id="编译器"><a href="#编译器" class="headerlink" title="编译器"></a>编译器</h2><p>需要写C文件和汇编文件，C文件利用GCC编译，汇编文件用NASM编译</p><h3 id="GCC编译器"><a href="#GCC编译器" class="headerlink" title="GCC编译器"></a>GCC编译器</h3><p>GCC（GNU Compiler Collection）是一个由GNU项目开发和维护的编译器集合，它支持多种编程语言，包括C、C++、Objective-C、Fortran、Ada和Go等。</p><p>我们利用GCC将c文件经过预处理、编译、汇编生成目标文件.o文件，.o文件包含了编译器生成的机器代码，但尚未被链接成最终的可执行文件。</p><h3 id="NASM编译器"><a href="#NASM编译器" class="headerlink" title="NASM编译器"></a>NASM编译器</h3><p>NASM（Netwide Assembler）是一个开源的汇编器，主要用于编写和编译x86和x86-64架构的汇编代码。它以其简洁的语法、易用性和对新处理器指令的支持而闻名。</p><p>我们利用nasm将.S汇编文件汇编成目标文件.o文件。</p><h2 id="虚拟机"><a href="#虚拟机" class="headerlink" title="虚拟机"></a>虚拟机</h2><p>利用Vmware装Ubuntu系统，在Ubuntu上进行开发</p><h2 id="硬件模拟器Bochs"><a href="#硬件模拟器Bochs" class="headerlink" title="硬件模拟器Bochs"></a>硬件模拟器Bochs</h2><p>Bochs是一个开源的x86硬件模拟器，它能够模拟整个PC硬件环境，包括CPU、内存、显卡、硬盘、网络等设备</p><p>利用Bochs配置硬件环境，可以在bochsrc的配置文件里进行配置，如内存大小</p><p>Bochs另一个重要功能是创建虚拟硬盘，操作系统无论如何也是存储在硬盘上的，因此肯定需要一个虚拟硬盘作为载体。</p><p>应该也可以用qemu，但我不会</p><h2 id="远程开发Vscode"><a href="#远程开发Vscode" class="headerlink" title="远程开发Vscode"></a>远程开发Vscode</h2><p>利用windows环境下的vscode，远程ssh连接虚拟机上的Ubuntu系统，方便开发。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>从零搭建操作系统</category>
+      
+    </categories>
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>“从零搭建操作系统” 记录</title>
+    <link href="/2024/12/21/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E8%AE%B0%E5%BD%95%E2%80%9D/"/>
+    <url>/2024/12/21/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E8%AE%B0%E5%BD%95%E2%80%9D/</url>
+    
+    <content type="html"><![CDATA[<h3 id="2024-12-21"><a href="#2024-12-21" class="headerlink" title="2024.12.21"></a>2024.12.21</h3><p>跟随《操作系统真象还原》这本书学习，共15章，目前已学完12章，随着对操作系统的深入感觉知识体系过于混乱，决定从头梳理前12章的内容，并记录在blog。</p><p>后三章分别是编写硬盘驱动程序，文件系统，系统交互（fork、shell、pipe等），逐渐偏向用户开发而不是内核开发，先吃透内核开发免得和用户开发混在一起。</p><p>冬至快乐！</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>从零搭建操作系统</category>
+      
+    </categories>
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>系统命令</title>
     <link href="/2024/12/18/hello-world/"/>
     <url>/2024/12/18/hello-world/</url>
