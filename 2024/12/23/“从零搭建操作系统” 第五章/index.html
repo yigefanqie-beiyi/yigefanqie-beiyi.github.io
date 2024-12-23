@@ -1,0 +1,673 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Bei">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="5.1 获取物理内存容量在linux中有多种获取容量的方法，如果其中一种方法失败，就会尝试调用别的方法，很多都是通过BIOS中断进行检测，但BIOS中断是实模式下的方法，因此只能在进入保护模式前调用，所以需要在进入保护模式前检测完内存容量。具体检测方式分为三种，具体详情可参考这里 在进入保护模式前补充代码： 123456789101112131415161718192021222324252627">
+<meta property="og:type" content="article">
+<meta property="og:title" content="“从零搭建操作系统” 第五章 保护模式进阶">
+<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2024/12/23/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E4%BA%94%E7%AB%A0/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="5.1 获取物理内存容量在linux中有多种获取容量的方法，如果其中一种方法失败，就会尝试调用别的方法，很多都是通过BIOS中断进行检测，但BIOS中断是实模式下的方法，因此只能在进入保护模式前调用，所以需要在进入保护模式前检测完内存容量。具体检测方式分为三种，具体详情可参考这里 在进入保护模式前补充代码： 123456789101112131415161718192021222324252627">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/20241223201027.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/20241223202440.png">
+<meta property="article:published_time" content="2024-12-23T08:56:34.000Z">
+<meta property="article:modified_time" content="2024-12-23T12:39:06.982Z">
+<meta property="article:author" content="Bei">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://yigefanqie-beiyi.github.io/img/20241223201027.png">
+  
+  
+  
+  <title>“从零搭建操作系统” 第五章 保护模式进阶 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yigefanqie-beiyi.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":50,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Bei</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="“从零搭建操作系统” 第五章 保护模式进阶"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-12-23 16:56" pubdate>
+          2024年12月23日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          19 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">“从零搭建操作系统” 第五章 保护模式进阶</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="5-1-获取物理内存容量"><a href="#5-1-获取物理内存容量" class="headerlink" title="5.1 获取物理内存容量"></a>5.1 获取物理内存容量</h2><p>在linux中有多种获取容量的方法，如果其中一种方法失败，就会尝试调用别的方法，很多都是通过BIOS中断进行检测，但BIOS中断是实模式下的方法，因此只能在进入保护模式前调用，所以需要在进入保护模式前检测完内存容量。<br>具体检测方式分为三种，具体详情可参考<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_43903639/article/details/129834247">这里</a></p>
+<p>在进入保护模式前补充代码：</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-comment">;----------------------------------loader_start----------------------------</span><br><span class="hljs-symbol">loader_start:</span><br>    <span class="hljs-comment">;进入保护模式之前，需要先检测内存</span><br>    <span class="hljs-comment">;先执行中断0x15子功能0xe820，遍历主机上的所有内存</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">sp</span>,LOADER_BASE_ADDR					<span class="hljs-comment">;设置栈顶为LOADER_BASE_ADDR</span><br>    <span class="hljs-keyword">xor</span> <span class="hljs-built_in">ebx</span>, <span class="hljs-built_in">ebx</span>    <span class="hljs-comment">;第一次调用时，ebx一定要置为0</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ax</span>, <span class="hljs-number">0</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">es</span>, <span class="hljs-built_in">ax</span>      <span class="hljs-comment">;将段寄存器es置为0</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">di</span>, ards_buf    <span class="hljs-comment">;ed：di是ards结构的缓冲区</span><br><span class="hljs-symbol">  .e820_mem_get_loop:</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, <span class="hljs-number">0x0000e820</span>   <span class="hljs-comment">;eax存放子功能号</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">edx</span>, <span class="hljs-number">0x534d4150</span> <span class="hljs-comment">;edx固定签名  </span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ecx</span>, <span class="hljs-number">20</span>         <span class="hljs-comment">;ecx存放ards结构体的大小，默认是20字节</span><br>    <span class="hljs-keyword">int</span> <span class="hljs-number">0x15</span>        <span class="hljs-comment">;调用0x15中断</span><br>    <span class="hljs-keyword">jc</span> .e820_failed_so_try_e801     <span class="hljs-comment">;CF=1表示出错则尝试下一个检测内存的方法，即0xe801中断</span><br>    <span class="hljs-keyword">add</span> <span class="hljs-built_in">di</span>, <span class="hljs-built_in">cx</span>      <span class="hljs-comment">;让es：di的di指针指向下一个新的ards结构位置</span><br>    <span class="hljs-keyword">inc</span> <span class="hljs-built_in">word</span> [ards_nr]      <span class="hljs-comment">;ards数量+1</span><br>    <span class="hljs-keyword">cmp</span> <span class="hljs-built_in">ebx</span>, <span class="hljs-number">0</span>      <br>    <span class="hljs-keyword">jnz</span> .e820_mem_get_loop      <span class="hljs-comment">;如果ebx不为0，说明还有结构体没返回，则继续循环，如果为0，说明下一个结构体为0，即遍历完了</span><br>    <span class="hljs-comment">;做一个简单的查找，找到内存上限最大的那个ards，并把内存上限存到total_mem_bytes</span><br>    <span class="hljs-comment">;对BaseAddrLow + LengthLow 的值进行判断，该值表示对应ards对应的内存上限</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">cx</span>, [ards_nr]<br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebx</span>,ards_buf<br>    <span class="hljs-keyword">xor</span> <span class="hljs-built_in">edx</span>,<span class="hljs-built_in">edx</span><br><span class="hljs-symbol">  .find_max_mem_area:</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [<span class="hljs-built_in">ebx</span>]<br>    <span class="hljs-keyword">add</span> <span class="hljs-built_in">eax</span>, [<span class="hljs-built_in">ebx</span> + <span class="hljs-number">8</span>]<br>    <span class="hljs-keyword">add</span> <span class="hljs-built_in">ebx</span>, <span class="hljs-number">20</span><br>    <span class="hljs-keyword">cmp</span> <span class="hljs-built_in">edx</span>, <span class="hljs-built_in">eax</span><br>    <span class="hljs-keyword">jge</span> .next_ards<br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">edx</span>, <span class="hljs-built_in">eax</span><br><span class="hljs-symbol">  .next_ards:</span><br>    <span class="hljs-keyword">loop</span> .find_max_mem_area<br>    <span class="hljs-keyword">jmp</span> .mem_get_ok<br>  <br>  <span class="hljs-comment">;如果0xe820不成功，则尝试0xe801</span><br><span class="hljs-symbol">  .e820_failed_so_try_e801:</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ax</span>, <span class="hljs-number">0xe801</span><br>    <span class="hljs-keyword">int</span> <span class="hljs-number">0x15</span><br>    <span class="hljs-keyword">jc</span> .e801_failed_so_try_88<br>    <span class="hljs-comment">; 1. 先算低于15MB的内存</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">cx</span>, <span class="hljs-number">0x400</span><br>    <span class="hljs-keyword">mul</span> <span class="hljs-built_in">cx</span>          <span class="hljs-comment">;1024字节*ax,乘积的低位放在ax，高位放在dx</span><br>    <span class="hljs-keyword">shl</span> <span class="hljs-built_in">edx</span>, <span class="hljs-number">16</span><br>    <span class="hljs-keyword">and</span> <span class="hljs-built_in">eax</span>, <span class="hljs-number">0x0000FFFF</span><br>    <span class="hljs-keyword">or</span> <span class="hljs-built_in">edx</span>, <span class="hljs-built_in">eax</span><br>    <span class="hljs-keyword">add</span> <span class="hljs-built_in">edx</span>, <span class="hljs-number">0x100000</span>       <span class="hljs-comment">;加上1MB的内存空缺</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">esi</span>, <span class="hljs-built_in">edx</span>    <br>    <span class="hljs-comment">; 2.接着算16MB以上的内存 以字节为单位</span><br>    <span class="hljs-keyword">xor</span> <span class="hljs-built_in">eax</span>, <span class="hljs-built_in">eax</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ax</span>, <span class="hljs-built_in">bx</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ecx</span>, <span class="hljs-number">0x10000</span><br>    <span class="hljs-keyword">mul</span> <span class="hljs-built_in">ecx</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">edx</span>, <span class="hljs-built_in">esi</span><br>    <span class="hljs-keyword">add</span> <span class="hljs-built_in">edx</span>, <span class="hljs-built_in">eax</span><br>    <span class="hljs-keyword">jmp</span> .mem_get_ok<br><br>  <span class="hljs-comment">;如果0xe801失败了，则尝试0x88</span><br><span class="hljs-symbol">  .e801_failed_so_try_88:</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-number">ah</span>,<span class="hljs-number">0x88</span><br>     <span class="hljs-keyword">int</span> <span class="hljs-number">0x15</span><br>     <span class="hljs-keyword">jc</span> .error_hlt<br>     <span class="hljs-keyword">and</span> <span class="hljs-built_in">eax</span>,<span class="hljs-number">0x0000FFFF</span><br>     <span class="hljs-keyword">mov</span> <span class="hljs-built_in">cx</span>,<span class="hljs-number">0x400</span>                                        <br>     <span class="hljs-keyword">mul</span> <span class="hljs-built_in">cx</span><br>     <span class="hljs-keyword">shl</span> <span class="hljs-built_in">edx</span>,<span class="hljs-number">16</span><br>     <span class="hljs-keyword">or</span> <span class="hljs-built_in">edx</span>,<span class="hljs-built_in">eax</span> <br>     <span class="hljs-keyword">add</span> <span class="hljs-built_in">edx</span>,<span class="hljs-number">0x100000</span><br><span class="hljs-symbol"></span><br><span class="hljs-symbol">  .error_hlt:</span><br>    <span class="hljs-keyword">jmp</span> $<br><span class="hljs-comment">;将内存上限赋给total_mem_bytes</span><br><span class="hljs-symbol">  .mem_get_ok:</span><br>    <span class="hljs-keyword">mov</span> [total_mem_bytes], <span class="hljs-built_in">edx</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="5-2-页表"><a href="#5-2-页表" class="headerlink" title="5.2 页表"></a>5.2 页表</h2><p>分页机制<strong>建立在分段机制</strong>上，经过段部件生成的线性地址，如果分页机制没打开，则直接映射为物理地址，如果分页地址已打开，则通过页部件检索页表找到对应的物理地址。</p>
+<h3 id="5-2-1-为什么要分页"><a href="#5-2-1-为什么要分页" class="headerlink" title="5.2.1 为什么要分页"></a>5.2.1 为什么要分页</h3><p>分页机制通过将内存分为固定大小的页面（通常是4KB）来简化内存管理。每个页面大小固定，操作系统只需要跟踪页面的分配情况，而不需要像分段机制那样处理可变大小的内存段。分段机制要求操作系统处理不同大小的段，并根据每个段的具体需求进行内存分配。这种不定长的段可能会导致<strong>内存碎片</strong>，尤其是在系统运行一段时间后，内存管理变得更加复杂。</p>
+<p>分页机制非常适合实现 虚拟内存。操作系统可以将一个进程的地址空间划分为多个固定大小的页面，并根据需要将这些页面映射到物理内存中的任意位置。分页机制使得操作系统能够将进程的<strong>虚拟地址空间和物理内存分开</strong>，从而可以实现 <strong>内存隔离 和 程序共享</strong>。</p>
+<p>分页机制通过 页表 管理虚拟地址到物理地址的映射。页表是一种非常简单且高效的数据结构，它将虚拟地址分为两部分：页号和页内偏移。页表的查找过程和操作是直接和<strong>快速</strong>的。页表通常较小，内存开销较低。</p>
+<h3 id="5-2-2-页表具体结构"><a href="#5-2-2-页表具体结构" class="headerlink" title="5.2.2 页表具体结构"></a>5.2.2 页表具体结构</h3><p>32位系统中，利用二级页表进行分页：</p>
+<ol>
+<li>分为页目录和页表，页目录有1024项，叫做页目录项PDE，每个页目录项对应一个页表，每个页表有1024项，叫做页表项。</li>
+<li>每个页目录项有32位，即4个字节，低12位是属性，高24位是该页目录项对应页表的地址。</li>
+<li>所以，页目录本身需要占据4096即4KB的内存空间。</li>
+<li>每个页表项有32位，即4个字节，低12位是属性，高24位是该页表项对应的物理页的地址。</li>
+<li>所以，页表本身需要占据4096即4KB的内存空间。</li>
+<li>所以，一个PTE映射一个物理页即4KB，一个页表映射1024个物理页即4M，一个页目录映射1024个页表即4G。</li>
+<li>32位的虚拟地址，高10位在页目录中找对应页目录项的下标，找到后根据该PDE的高20位找到对应页表。</li>
+<li>32位的虚拟地址，中10位在上一步找到的页表中找对应页表项的下标，找到后根据该PTE的高20位找到对应物理页。</li>
+<li>32位的虚拟地址，低12位在上一步找到的物理页中充当偏移地址，找到4KB的物理页对应的字节。</li>
+</ol>
+<p><img src="/../img/20241223201027.png" srcset="/img/loading.gif" lazyload title="页目录和页表表项结构"></p>
+<h3 id="5-2-3-如何启动分页机制"><a href="#5-2-3-如何启动分页机制" class="headerlink" title="5.2.3 如何启动分页机制"></a>5.2.3 如何启动分页机制</h3><ol>
+<li>准备好页目录和页表</li>
+<li>将页目录地址写入控制寄存器cr3</li>
+<li>寄存器cr0的PG位置1</li>
+</ol>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-comment">;----------------------------------------创建页目录和页表-----------------------------------</span><br><span class="hljs-symbol">setup_page:</span><br>    <span class="hljs-comment">;将页目录项清空</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ecx</span>, <span class="hljs-number">0x1000</span>     <span class="hljs-comment">;循环4096次，因为页目录有1024项，每项占4字节</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">esi</span>, <span class="hljs-number">0</span><br><span class="hljs-symbol">  .clear_page_dir:</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">byte</span> [PAGE_DIR_TABLE_POS + <span class="hljs-built_in">esi</span>], <span class="hljs-number">0</span><br>    <span class="hljs-keyword">inc</span> <span class="hljs-built_in">esi</span><br>    <span class="hljs-keyword">loop</span> .clear_page_dir<br>    <span class="hljs-comment">;创建页目录项PDE</span><br><span class="hljs-symbol">  .create_pde:</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, PAGE_DIR_TABLE_POS<br>    <span class="hljs-keyword">add</span> <span class="hljs-built_in">eax</span>, <span class="hljs-number">0x1000</span>     <span class="hljs-comment">;eax存放第一个页表的地址</span><br>    <span class="hljs-comment">;设定特殊的页目录项，0,768,1023</span><br>    <span class="hljs-keyword">or</span> <span class="hljs-built_in">eax</span>, PG_P | PG_RW_W | PG_US_U <br>    <span class="hljs-keyword">mov</span> [PAGE_DIR_TABLE_POS+<span class="hljs-number">0x0</span>],<span class="hljs-built_in">eax</span>       <span class="hljs-comment">;把页目录的第0项和第768项对应的页表设置为最低端的物理内存              </span><br>    <span class="hljs-keyword">mov</span> [PAGE_DIR_TABLE_POS+<span class="hljs-number">0xc00</span>],<span class="hljs-built_in">eax</span><br>    <span class="hljs-keyword">sub</span> <span class="hljs-built_in">eax</span>,<span class="hljs-number">0x1000</span>      <br>    <span class="hljs-keyword">mov</span> [PAGE_DIR_TABLE_POS+<span class="hljs-number">4092</span>],<span class="hljs-built_in">eax</span>       <span class="hljs-comment">;虚拟内存最后一个页目录项，指向页目录本身，为了可以通过虚拟地址访问页表本身</span><br>    <span class="hljs-comment">;创建内核对应页表的映射</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, PAGE_DIR_TABLE_POS<br>    <span class="hljs-keyword">add</span> <span class="hljs-built_in">eax</span>, <span class="hljs-number">0x1000</span>         <span class="hljs-comment">;此时eax存放的是第一个页表的位置</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ecx</span>, <span class="hljs-number">256</span>            <span class="hljs-comment">;由于内核应该是小于1M，一个页表项有4KB，所以暂时先设置256个页表项</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">esi</span>, <span class="hljs-number">0</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebx</span>, PG_P | PG_RW_W | PG_US_U <br><span class="hljs-symbol">  .create_kernel_pte:</span><br>    <span class="hljs-keyword">mov</span> [<span class="hljs-built_in">eax</span> + <span class="hljs-built_in">esi</span>*<span class="hljs-number">4</span>], <span class="hljs-built_in">ebx</span>      <span class="hljs-comment">;将页表对应的值设置为，也可以说映射到对应的内存起点</span><br>    <span class="hljs-keyword">inc</span> <span class="hljs-built_in">esi</span><br>    <span class="hljs-keyword">add</span> <span class="hljs-built_in">ebx</span>,<span class="hljs-number">0x1000</span>          <span class="hljs-comment">;页的大小为4KB，所以在映射下一个页时，应该加4096</span><br>    <span class="hljs-keyword">loop</span> .create_kernel_pte         <span class="hljs-comment">;循环，直到把第一个页表的前256个页表项都映射到内存0-1M处</span><br>    <span class="hljs-comment">;创建页目录第768项之后的映射关系</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, PAGE_DIR_TABLE_POS<br>    <span class="hljs-keyword">add</span> <span class="hljs-built_in">eax</span>, <span class="hljs-number">0x2000</span>     <span class="hljs-comment">;eax存了第二个页表地址</span><br>    <span class="hljs-keyword">or</span> <span class="hljs-built_in">eax</span>, PG_P | PG_RW_W | PG_US_U<br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebx</span>, PAGE_DIR_TABLE_POS<br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ecx</span>, <span class="hljs-number">254</span>        <span class="hljs-comment">;一共有1024个页目录项，最后一个特殊，则要循环1024-1-769=254</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">esi</span>, <span class="hljs-number">769</span>        <span class="hljs-comment">;从第769个目录项开始</span><br><span class="hljs-symbol">  .create_kernel_pde:</span><br>    <span class="hljs-keyword">mov</span> [<span class="hljs-built_in">ebx</span> + <span class="hljs-built_in">esi</span>*<span class="hljs-number">4</span>], <span class="hljs-built_in">eax</span>      <span class="hljs-comment">;从第769个目录项映射第2个页表，以此递推</span><br>    <span class="hljs-keyword">inc</span> <span class="hljs-built_in">esi</span><br>    <span class="hljs-keyword">add</span> <span class="hljs-built_in">eax</span>, <span class="hljs-number">0x1000</span><br>    <span class="hljs-keyword">loop</span> .create_kernel_pde<br><br>    <span class="hljs-keyword">ret</span><br></code></pre></td></tr></table></figure>
+<p>我们模仿linux，虚拟空间的最高1GB给操作系统，供所有用户共享，低3GB给进程，属于每个进程私有<br>上述代码完成了如下映射：</p>
+<ol>
+<li>页目录项0 映射 第1个页表         </li>
+<li>页目录项c00，即768 映射 第1个页表</li>
+<li>页目录项769到1022 映射 第2到254个页表</li>
+<li>最后一个页目录项 映射 页目录本身基地址</li>
+<li>第一个页表映射为低端0-1M的内存，还有3M未作映射</li>
+</ol>
+<p><strong>为什么页目录项0和768都要映射到第一个页表？</strong>  原因是我们在加载内核前，运行的都是Loader，它本身代码都在1MB以内，必须保证之前段机制下的线性地址和分页后的虚拟地址对应的物理地址一致，所以用页目录项0来保证loader在分页机制下依然可以使用。我们是把操作系统放在物理地址低端1M以内的，但设置的虚拟空间3G以上存放操作系统，所以要将虚拟地址3G以上1M映射到物理地址低端1M以内，即页目录项768要映射到第一个页表。<br><strong>为什么最后一个页目录项 映射 页目录本身基地址？</strong>  方便用虚拟地址来找到页表的位置</p>
+<p><img src="/../img/20241223202440.png" srcset="/img/loading.gif" lazyload title="当前页目录和页表在内存的位置"></p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-comment">;----------------------------------------打开分页-----------------------------------</span><br>    <span class="hljs-comment">;创建页目录以及对应页表的映射</span><br>    <span class="hljs-keyword">call</span> setup_page<br>    <span class="hljs-comment">;将当前段描述符地址以及偏移量写入内存gdt_ptr</span><br>    <span class="hljs-keyword">sgdt</span> [gdt_ptr]<br>    <span class="hljs-comment">;gdt是六个字节大小，前两个字节是偏移量，后面四个字节是基址，将gdt基址放到ebx</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebx</span>, [gdt_ptr + <span class="hljs-number">2</span>]<br>    <span class="hljs-comment">;更改视频段的段基址，改到3GB以上    </span><br>    <span class="hljs-keyword">or</span> <span class="hljs-built_in">dword</span> [<span class="hljs-built_in">ebx</span> + <span class="hljs-number">0x18</span> + <span class="hljs-number">4</span>], <span class="hljs-number">0xc0000000</span><br>    <span class="hljs-comment">;把gdt的基址也搬到3GB以上</span><br>    <span class="hljs-keyword">add</span> <span class="hljs-built_in">dword</span> [gdt_ptr + <span class="hljs-number">2</span>], <span class="hljs-number">0xc0000000</span><br>    <span class="hljs-keyword">add</span> <span class="hljs-built_in">esp</span>, <span class="hljs-number">0xc0000000</span><br>    <span class="hljs-comment">;将页表基址放到cr3，打开cr0，开启页表</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, PAGE_DIR_TABLE_POS<br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">cr3</span>, <span class="hljs-built_in">eax</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, <span class="hljs-built_in">cr0</span><br>    <span class="hljs-keyword">or</span> <span class="hljs-built_in">eax</span>, <span class="hljs-number">0x80000000</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">cr0</span>, <span class="hljs-built_in">eax</span><br>    <span class="hljs-keyword">lgdt</span> [gdt_ptr]<br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">byte</span> [<span class="hljs-built_in">gs</span>:<span class="hljs-number">160</span>], <span class="hljs-string">&#x27;V&#x27;</span><br>    <span class="hljs-keyword">xchg</span> <span class="hljs-built_in">bx</span>, <span class="hljs-built_in">bx</span><br>    <span class="hljs-keyword">jmp</span> SELECTOR_CODE:enter_kernel<br></code></pre></td></tr></table></figure>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="category-chain-item">从零搭建操作系统</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>“从零搭建操作系统” 第五章 保护模式进阶</div>
+      <div>https://yigefanqie-beiyi.github.io/2024/12/23/“从零搭建操作系统” 第五章/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Bei</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年12月23日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/12/23/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E5%9B%9B%E7%AB%A0/" title="“从零搭建操作系统” 第四章 保护模式入门">
+                        <span class="hidden-mobile">“从零搭建操作系统” 第四章 保护模式入门</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <span>Yi</span> <i class="iconfont icon-love"></i> <span>Yi</span> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
