@@ -1,0 +1,719 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Bei">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="9.1 进程、线程、调度的一些理解 通俗地讲，一个进程可以完成一项工作，执行这项工作的程序就是进程，该工作可能由很多个子工作构成，我们需要让进程尽可能多的“同时”完成多个子工作，提升效率，完成这些子工作的程序就叫做线程。 单核CPU在一个时刻只能执行一个线程，通过多任务调度看起来像是并行执行多个线程，其实是因为不同线程快速切换才给人这种错觉，多核CPU在一个时刻可以真正并行执行多个线程。 上述多任">
+<meta property="og:type" content="article">
+<meta property="og:title" content="“从零搭建操作系统” 第九章 线程">
+<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2025/01/02/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E4%B9%9D%E7%AB%A0/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="9.1 进程、线程、调度的一些理解 通俗地讲，一个进程可以完成一项工作，执行这项工作的程序就是进程，该工作可能由很多个子工作构成，我们需要让进程尽可能多的“同时”完成多个子工作，提升效率，完成这些子工作的程序就叫做线程。 单核CPU在一个时刻只能执行一个线程，通过多任务调度看起来像是并行执行多个线程，其实是因为不同线程快速切换才给人这种错觉，多核CPU在一个时刻可以真正并行执行多个线程。 上述多任">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-01-02T10:09:31.000Z">
+<meta property="article:modified_time" content="2025-01-03T07:51:31.783Z">
+<meta property="article:author" content="Bei">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>“从零搭建操作系统” 第九章 线程 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yigefanqie-beiyi.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":50,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Bei</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="“从零搭建操作系统” 第九章 线程"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-01-02 18:09" pubdate>
+          2025年1月2日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.1k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          43 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">“从零搭建操作系统” 第九章 线程</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="9-1-进程、线程、调度的一些理解"><a href="#9-1-进程、线程、调度的一些理解" class="headerlink" title="9.1 进程、线程、调度的一些理解"></a>9.1 进程、线程、调度的一些理解</h2><ol>
+<li>通俗地讲，一个进程可以完成一项工作，执行这项工作的程序就是进程，该工作可能由很多个子工作构成，我们需要让进程尽可能多的“同时”完成多个子工作，提升效率，完成这些子工作的程序就叫做线程。</li>
+<li>单核CPU在一个时刻只能执行一个线程，通过多任务调度看起来像是并行执行多个线程，其实是因为不同线程快速切换才给人这种错觉，多核CPU在一个时刻可以真正并行执行多个线程。</li>
+<li>上述多任务调度是由任务调度器来控制的，任务调度器是操作系统的功能之一，通过不同的调度算法，例如最经典的时间片轮转算法完成不同任务的调度。</li>
+<li>任务调度的调度单元是执行流，其实每个进程或线程都是一段执行流，在调度时要保存好执行流的上下文环境，例如栈、寄存器映像、内存等。我们要给任何想单独上处理器的代码块准备好以来的上下文环境，使之成为执行流，即调度单元。</li>
+<li>任务调度必定涉及到不同任务的切换，切换就会有损耗。</li>
+<li>进程的创建需要大量资源，程序必须在获得运行所需要的资源后才能成为进程，包括进程所使用的栈、寄存器映像等。其实如果想要实现多并发的效果，那么多进程就可以实现，但是进程的创建都需要大量的资源（例如：PCB、硬盘资源等），因此开销就变大了；而且创建时需要大量的资源，也是需要更多的时间，因此导致速度变慢了，因此需要线程进行提速，提出了可以 共享 两字，先创建一个进程并且分配好资源，后续创建的进程创建时只需要分配一个简单PCB，然后 共享 第一个进程的文件描述表、内存硬盘等资源，从而使开销减小、速度更快。而后续的进程便是轻量级进程—-线程。</li>
+<li>可以认为，线程是在进程基础之上的二次并发。</li>
+<li>进程可以分为单线程进程和多线程进程。进程&#x3D;线程+资源</li>
+<li>线程就是执行流，真正上处理器运行的其实都叫做线程，进程中的线程才是一个个的执行实体、执行流，因此，经调度器送上处理器执行的程序都是线程。</li>
+<li>进程是操作系统进行资源分配的基本单位，线程是操作系统进行调度的基本单位。</li>
+<li>我们接下来要实现的代码，是在内核中实现线程，即线程表在内核中，线程由操作系统负责调度。</li>
+</ol>
+<h2 id="9-2-在内核空间实现线程"><a href="#9-2-在内核空间实现线程" class="headerlink" title="9.2 在内核空间实现线程"></a>9.2 在内核空间实现线程</h2><p>操作系统为每个进程提供一个PCB，它就是进程的身份证，用来记录与此进程相关的信心，例如进程状态，PID，优先级等</p>
+<p>thread.h</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*自定义一个通用函数类型，将在很多线程函数中作为形参类型*/</span><br><span class="hljs-keyword">typedef</span> <span class="hljs-type">void</span> <span class="hljs-title function_">thread_func</span><span class="hljs-params">(<span class="hljs-type">void</span>*)</span>;<br><br><span class="hljs-comment">/*存储进程或线程，即统称为任务的状态*/</span><br><span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">task_status</span></span><br><span class="hljs-class">&#123;</span><br>    TASK_RUNNING, <span class="hljs-comment">// 0</span><br>    TASK_READY,   <span class="hljs-comment">// 1</span><br>    TASK_BLOCKED, <span class="hljs-comment">// 2</span><br>    TASK_WAITING, <span class="hljs-comment">// 3</span><br>    TASK_HANGING, <span class="hljs-comment">// 4</span><br>    TASK_DIED     <span class="hljs-comment">// 5</span><br>&#125;;<br><br><span class="hljs-comment">/*程序的中断栈，用于发生中断时保存程序的上下文，对应kernel.S中intr%1entry里压入栈的数据*/</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">intr_stack</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">uint32_t</span> vec_no; <span class="hljs-comment">//中断号</span><br>    <span class="hljs-type">uint32_t</span> edi;<br>    <span class="hljs-type">uint32_t</span> esi;<br>    <span class="hljs-type">uint32_t</span> ebp;<br>    <span class="hljs-type">uint32_t</span> esp_dummy;<br>    <span class="hljs-type">uint32_t</span> ebx;<br>    <span class="hljs-type">uint32_t</span> edx;<br>    <span class="hljs-type">uint32_t</span> ecx;<br>    <span class="hljs-type">uint32_t</span> eax;<br>    <span class="hljs-type">uint32_t</span> gs;<br>    <span class="hljs-type">uint32_t</span> fs;<br>    <span class="hljs-type">uint32_t</span> es;<br>    <span class="hljs-type">uint32_t</span> ds;<br>    <span class="hljs-comment">//以下由cpu从低特权级进入高特权级时压入</span><br>    <span class="hljs-type">uint32_t</span> err_code;<br>    <span class="hljs-type">void</span> (*eip) (<span class="hljs-type">void</span>);        <span class="hljs-comment">//这里声明了一个函数指针 </span><br>    <span class="hljs-type">uint32_t</span> cs;<br>    <span class="hljs-type">uint32_t</span> eflags;<br>    <span class="hljs-type">void</span>* esp;<br>    <span class="hljs-type">uint32_t</span> ss;<br>&#125;;<br><br><span class="hljs-comment">/*线程栈，保护线程环境*/</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">thread_stack</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">uint32_t</span> ebp;   <span class="hljs-comment">//根据ABI规则，在c语言的函数需要调用汇编编写的函数时，要保护ebp，ebx，edi，esi，esp这五个寄存器的值</span><br>    <span class="hljs-type">uint32_t</span> ebx;   <span class="hljs-comment">//esp的值通过调用约定保证</span><br>    <span class="hljs-type">uint32_t</span> edi;<br>    <span class="hljs-type">uint32_t</span> esi;<br><br>    <span class="hljs-type">void</span> (*eip) (thread_func* func,<span class="hljs-type">void</span>* func_arg); <span class="hljs-comment">//和下面的相互照应 以ret 汇编代码进入kernel_thread函数调用</span><br>    <br>    <span class="hljs-type">void</span> (*unused_retaddr);                         <span class="hljs-comment">//占位数 在栈顶站住了返回地址的位置 因为是汇编ret </span><br>    thread_func* function;                          <span class="hljs-comment">//进入kernel_thread要调用的函数地址</span><br>    <span class="hljs-type">void</span>* func_arg;				      <span class="hljs-comment">//参数指针</span><br>&#125;;<br><br><span class="hljs-comment">/*PCB结构体，存储进程或线程的基本信息*/</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">uint32_t</span>* self_kstack;                          <span class="hljs-comment">//当前线程对应的内核栈</span><br>    <span class="hljs-type">pid_t</span> pid;<br>    <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">task_status</span> <span class="hljs-title">status</span>;</span>                        <span class="hljs-comment">//线程状态</span><br>    <span class="hljs-type">char</span> name[<span class="hljs-number">16</span>];<br>    <span class="hljs-type">uint8_t</span> priority;				      <span class="hljs-comment">//特权级</span><br>    <span class="hljs-type">uint8_t</span> ticks;              <span class="hljs-comment">//每次在处理器上执行的时间滴答数</span><br>    <span class="hljs-type">uint32_t</span> elapsed_ticks;     <span class="hljs-comment">//此任务执行了多久，即此任务从上cpu运行后至今占用了多少cpu滴答数</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_elem</span> <span class="hljs-title">general_tag</span>;</span>       <span class="hljs-comment">//用于线程在一般的队列中的节点</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_elem</span> <span class="hljs-title">all_list_tag</span>;</span>      <span class="hljs-comment">//用于线程在线程队列中的节点</span><br>    <span class="hljs-type">uint32_t</span>* pgdir;        <span class="hljs-comment">//进程自己页表的虚拟地址</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtual_addr</span> <span class="hljs-title">userprog_vaddr</span>;</span>     <span class="hljs-comment">//用户进程的虚拟地址池</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">mem_block_desc</span> <span class="hljs-title">u_block_desc</span>[<span class="hljs-title">DESC_CNT</span>];</span>   <span class="hljs-comment">//用户进程内存块描述符</span><br>    <span class="hljs-type">uint32_t</span> stack_magic;			      <span class="hljs-comment">//越界检查  因为我们pcb上面的就是我们要用的栈了 到时候还要越界检查</span><br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>thread.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*由kernel_thread去执行funciton*/</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">kernel_thread</span><span class="hljs-params">(thread_func* function, <span class="hljs-type">void</span>* func_arg)</span>&#123;<br>    intr_enable();      <span class="hljs-comment">//在执行线程的函数前要打开中断，避免时钟中断被屏蔽，导致无法通过时钟中断调度其它线程</span><br>    function(func_arg);<br>&#125;<br><br><span class="hljs-comment">/*创建线程栈，将要执行的函数和对应传参放入栈中*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">thread_create</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> task_struct* pthread, thread_func function, <span class="hljs-type">void</span>* func_arg)</span>&#123;<br>    pthread -&gt; self_kstack -= <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> intr_stack);    <span class="hljs-comment">//预留中断栈的位置</span><br>    pthread -&gt; self_kstack -= <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> thread_stack);  <span class="hljs-comment">//预留线程栈的位置</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">thread_stack</span>* <span class="hljs-title">kthread_stack</span> =</span> (<span class="hljs-keyword">struct</span> thread_stack*)pthread -&gt; self_kstack;  <span class="hljs-comment">//创建一个线程栈，指向对应位置，要注意C语言的结构体是从低内存排到高内存的</span><br>    kthread_stack -&gt; eip = kernel_thread;<br>    kthread_stack -&gt; function = function;<br>    kthread_stack -&gt; func_arg = func_arg;<br>    kthread_stack -&gt; ebp = kthread_stack -&gt; ebx = kthread_stack -&gt; esi = kthread_stack -&gt; edi = <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-comment">/*初始化线程的基本信息*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">init_thread</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> task_struct* pthread, <span class="hljs-type">char</span>* name, <span class="hljs-type">int</span> prio)</span>&#123;<br>    <span class="hljs-built_in">memset</span>(pthread, <span class="hljs-number">0</span>, <span class="hljs-keyword">sizeof</span>(*pthread));   <br>    pthread -&gt; pid = allocate_pid();<br>    <span class="hljs-built_in">strcpy</span>(pthread -&gt; name, name);<br>    <span class="hljs-keyword">if</span>(pthread == main_thread)&#123;<br>        pthread -&gt; status = TASK_RUNNING;<br>    &#125;<br>    <span class="hljs-keyword">else</span>&#123;<br>        pthread -&gt; status = TASK_READY;<br>    &#125;<br>    pthread -&gt; ticks = prio;<br>    pthread -&gt; elapsed_ticks = <span class="hljs-number">0</span>;<br>    pthread -&gt; pgdir = <span class="hljs-literal">NULL</span>;<br>    pthread -&gt; priority = prio;<br>    pthread -&gt; stack_magic = <span class="hljs-number">0x19870916</span>;    <span class="hljs-comment">//魔数，可以随意设置</span><br>    pthread -&gt; self_kstack = (<span class="hljs-type">uint32_t</span>*)((<span class="hljs-type">uint32_t</span>)pthread + PG_SIZE);  <span class="hljs-comment">//设置线程在内核态下栈顶的位置</span><br>&#125;<br><br><span class="hljs-comment">/*创建优先级为prio的线程，线程名为name，所实行的函数为function(func_arg)*/</span><br><span class="hljs-comment">/*无论是用户的还是内核的线程，PCB都是在内核空间的*/</span><br><span class="hljs-keyword">struct</span> task_struct* <span class="hljs-title function_">thread_start</span><span class="hljs-params">(<span class="hljs-type">char</span>* name, <span class="hljs-type">int</span> prio, thread_func function, <span class="hljs-type">void</span>* func_arg)</span>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span>* <span class="hljs-title">thread</span> =</span> get_kernel_pages(<span class="hljs-number">1</span>);   <span class="hljs-comment">//从内核池分配一页用来存放PCB指针thread，此时thread指向PCB的最低地址</span><br>    init_thread(thread, name, prio);    <span class="hljs-comment">//  初始化线程的基本信息</span><br>    thread_create(thread, function, func_arg);  <span class="hljs-comment">//创建对应的线程栈</span><br>    <span class="hljs-keyword">asm</span> <span class="hljs-title function_">volatile</span><span class="hljs-params">(<span class="hljs-string">&quot;movl %0,%%esp; pop %%ebp; pop %%ebx; pop %%edi; pop %%esi; ret&quot;</span> : : <span class="hljs-string">&quot;g&quot;</span>(thread-&gt;self_kstack) :<span class="hljs-string">&quot;memory&quot;</span>)</span>; <span class="hljs-comment">//栈顶的位置为 thread-&gt;self_kstack </span><br>    <span class="hljs-keyword">return</span> thread;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<p>本小节只是让线程跑起来，因此比较简陋，代码后面还会修改，逻辑是：</p>
+<ol>
+<li>调用<code>struct task_struct* thread_start(char* name, int prio, thread_func function, void* func_arg)</code>，创建优先级为prio的线程，线程名为name，所实行的函数为function(func_arg)，具体流程为：<ul>
+<li>从内核池分配一页用来存放PCB指针thread，此时thread指向PCB的最低地址</li>
+<li>调用<code>void init_thread(struct task_struct* pthread, char* name, int prio)</code>初始化线程的基本信息<ul>
+<li>其中<code>pthread -&gt; self_kstack = (uint32_t*)((uint32_t)pthread + PG_SIZE)</code>设置线程在内核态下栈顶的位置</li>
+<li>其中<code>pthread -&gt; stack_magic = 0x19870916;</code>是魔数，防止入栈操作过多破坏PCB低处的线程信息</li>
+</ul>
+</li>
+<li>调用<code>void thread_create(struct task_struct* pthread, thread_func function, void* func_arg)</code>创建对应的线程栈，将要执行的函数和对应传参放入栈中<ul>
+<li>预留中断栈和线程栈的位置</li>
+<li>给线程栈里的值进行赋值，其中<code>kthread_stack -&gt; eip = kernel_thread;</code> <code>kthread_stack -&gt; function = function;</code> <code>kthread_stack -&gt; func_arg = func_arg;</code> 用来给线程栈要调用的函数以及相应的函数参数赋值，由kernel_thread去执行funciton</li>
+</ul>
+</li>
+<li>这里暂时用汇编测试，<code>asm volatile(&quot;movl %0,%%esp; pop %%ebp; pop %%ebx; pop %%edi; pop %%esi; ret&quot; : : &quot;g&quot;(thread-&gt;self_kstack) :&quot;memory&quot;)</code><ul>
+<li>现将esp赋值为thread-&gt;self_kstack，也就是线程栈的栈顶</li>
+<li>按照线程栈的结构，根据ABI规则开始pop四个寄存器</li>
+<li>执行 ret ，这个操作会把栈顶的数据作为返回地址送上处理器的EIP寄存器，此时栈顶数据为<code>kthread_stack -&gt; eip = kernel_thread;</code>也就是kernel_thread函数的地址，同时还会将后面的参数function，func_arg弹出，这样程序会去执行kernel_thread函数，在这个函数里执行function(func_arg);</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>可以在其他地方通过直接调用thread_start函数创建线程</li>
+<li>只创建一个线程的话，不进行调度，其实就是创建好PCB等一系列目前没用的东西（多线程调度才用），然后通过ret去执行一个函数。</li>
+</ol>
+<p><strong>三个疑问</strong><br>为什么一定要用ret来实现？</p>
+<p>为什么要用kernel_thread函数来实现，不能直接ret返回到实际要执行的函数function吗？</p>
+<p>线程栈里的占位数有什么用？（已解决）<br>答：</p>
+<ol>
+<li>我们来看这句代码<code>asm volatile(&quot;movl %0,%%esp; pop %%ebp; pop %%ebx; pop %%edi; pop %%esi; ret&quot; : : &quot;g&quot;(thread-&gt;self_kstack) :&quot;memory&quot;)</code>，将esp设置为线程栈的栈顶，然后按照ABI规则pop四个寄存器，然后执行ret，ret会将此时栈顶指向的数据作为返回地址加载到cs寄存器中以便下一步执行，那么ret之后栈的结构变为：栈顶esp（占位数），esp+4（函数地址function），esp+8（函数参数func_arg），由于只执行了ret，因此当前处理器会去执行ret弹出的返回地址，在这里也就是去执行kernel_thread这个函数。</li>
+<li>我们再来看一个函数调用的时候会发生什么，执行call+函数的时候，会将函数的参数从右到左压入栈，然后压入函数的返回地址（也就是主线程执行完该函数后执行的下一句程序），该函数的参数通过返回地址+4，返回地址+8等进行获取。</li>
+<li>结合两者看，此时cpu执行着kernel_thread函数，栈的结构为：栈顶esp（占位数），esp+4（函数地址function），esp+8（函数参数func_arg），获得该函数的参数需要通过本来压入栈的该函数的返回地址+4 +8等获得，但是这里并没有像传统的call进行压栈等操作，因此占位数的作用就是占这个位置，假装自己是返回地址，通过这个位置模仿函数调用时完成对参数的读取，这样才能获得两个参数：函数地址function，函数参数func_arg。</li>
+</ol>
+<h2 id="9-3-双向链表"><a href="#9-3-双向链表" class="headerlink" title="9.3 双向链表"></a>9.3 双向链表</h2><p>通过双向列表实现队列，队列在进程的就绪队列，锁的等待队列中用到，直接放代码<br>list.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;list.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;interrupt.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;stdint.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;debug.h&quot;</span></span><br><br><span class="hljs-comment">//初始化双向链表</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">list_init</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> <span class="hljs-built_in">list</span>* <span class="hljs-built_in">list</span>)</span><br>&#123;<br>    <span class="hljs-built_in">list</span>-&gt;head.prev = <span class="hljs-literal">NULL</span>;<br>    <span class="hljs-built_in">list</span>-&gt;head.next = &amp;<span class="hljs-built_in">list</span>-&gt;tail;<br>    <span class="hljs-built_in">list</span>-&gt;tail.prev = &amp;<span class="hljs-built_in">list</span>-&gt;head;<br>    <span class="hljs-built_in">list</span>-&gt;tail.next = <span class="hljs-literal">NULL</span>;<br>&#125;<br><br><span class="hljs-comment">//把链表 elem放在 before前面</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">list_insert_before</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> list_elem* before,<span class="hljs-keyword">struct</span> list_elem* elem)</span><br>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">intr_status</span> <span class="hljs-title">old_status</span> =</span> intr_disable();<br>       <br>    elem-&gt;next = before;<br>    elem-&gt;prev = before-&gt;prev;<br>    before-&gt;prev-&gt;next = elem;<br>    before-&gt;prev = elem;<br>    <br>    intr_set_status(old_status); <br>    <br>&#125;<br><br><span class="hljs-comment">//添加元素到链表队首</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">list_push</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> <span class="hljs-built_in">list</span>* plist,<span class="hljs-keyword">struct</span> list_elem* elem)</span><br>&#123;<br>    list_insert_before(plist-&gt;head.next,elem);<br>&#125;<br><br><span class="hljs-comment">//添加元素到链表队尾</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">list_append</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> <span class="hljs-built_in">list</span>* plist,<span class="hljs-keyword">struct</span> list_elem* elem)</span><br>&#123;<br>    list_insert_before(&amp;plist-&gt;tail,elem);<br>&#125;<br><br><span class="hljs-comment">//让pelem脱离链表</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">list_remove</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> list_elem* pelem)</span><br>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">intr_status</span> <span class="hljs-title">old_status</span> =</span> intr_disable();<br>    <br>    pelem-&gt;prev-&gt;next = pelem-&gt;next;<br>    pelem-&gt;next-&gt;prev = pelem-&gt;prev;<br>    <br>    intr_set_status(old_status);<br>&#125;<br><br><span class="hljs-comment">//让链表的第一个元素脱离链表</span><br><span class="hljs-keyword">struct</span> list_elem* <span class="hljs-title function_">list_pop</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> <span class="hljs-built_in">list</span>* plist)</span><br>&#123;<br>    ASSERT(plist-&gt;head.next != &amp;plist-&gt;tail);<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_elem</span>* <span class="hljs-title">ret</span> =</span> plist-&gt;head.next;<br>    list_remove(plist-&gt;head.next);<br>    <span class="hljs-keyword">return</span> ret;<br>&#125;<br><br><span class="hljs-type">bool</span> <span class="hljs-title function_">list_empty</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> <span class="hljs-built_in">list</span>* plist)</span><br>&#123;<br>    <span class="hljs-keyword">return</span> (plist-&gt;head.next == &amp;plist-&gt;tail ? <span class="hljs-literal">true</span> : <span class="hljs-literal">false</span>);<br>&#125;<br><br><span class="hljs-type">uint32_t</span> <span class="hljs-title function_">list_len</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> <span class="hljs-built_in">list</span>* plist)</span><br>&#123;<br>    <span class="hljs-type">uint32_t</span> ret = <span class="hljs-number">0</span>;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_elem</span>* <span class="hljs-title">next</span> =</span> plist-&gt;head.next;<br>    <span class="hljs-keyword">while</span>(next != &amp;plist-&gt;tail)<br>    &#123;<br>    	next = next-&gt;next;<br>    	++ret;<br>    &#125;<br>    <span class="hljs-keyword">return</span> ret;<br>&#125;<br><br><span class="hljs-keyword">struct</span> list_elem* <span class="hljs-title function_">list_traversal</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> <span class="hljs-built_in">list</span>* plist,function func,<span class="hljs-type">int</span> arg)</span><br>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_elem</span>* <span class="hljs-title">elem</span> =</span> plist-&gt;head.next;<br>    <span class="hljs-keyword">if</span>(list_empty(plist))	<span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br>    <span class="hljs-keyword">while</span>(elem != &amp;plist-&gt;tail)<br>    &#123;<br>    	<span class="hljs-keyword">if</span>(func(elem,arg))	<span class="hljs-keyword">return</span> elem;<br>    	elem = elem-&gt;next;<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br>&#125;<br><br><span class="hljs-type">bool</span> <span class="hljs-title function_">elem_find</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> <span class="hljs-built_in">list</span>* plist,<span class="hljs-keyword">struct</span> list_elem* obj_elem)</span><br>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_elem</span>* <span class="hljs-title">ptr</span> =</span> plist-&gt;head.next;<br>    <span class="hljs-keyword">while</span>(ptr != &amp;plist-&gt;tail)<br>    &#123;<br>    	<span class="hljs-keyword">if</span>(ptr == obj_elem)	<span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>; <br>    	ptr = ptr-&gt;next;<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<h2 id="9-4-多线程调度"><a href="#9-4-多线程调度" class="headerlink" title="9.4 多线程调度"></a>9.4 多线程调度</h2><p>thread.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span>* <span class="hljs-title">main_thread</span>;</span>        <span class="hljs-comment">//主线程main的PCB</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list</span> <span class="hljs-title">thread_ready_list</span>;</span>      <span class="hljs-comment">//就绪队列</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list</span> <span class="hljs-title">thread_all_list</span>;</span>        <span class="hljs-comment">//所有任务队列</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">lock</span> <span class="hljs-title">pid_lock</span>;</span><br><span class="hljs-type">static</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_elem</span>* <span class="hljs-title">thread_tag</span>;</span>        <span class="hljs-comment">//保存队列中的线程节点</span><br><br><span class="hljs-keyword">extern</span> <span class="hljs-type">void</span> <span class="hljs-title function_">switch_to</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> task_struct* cur,<span class="hljs-keyword">struct</span> task_struct* next)</span>;<br><br><span class="hljs-comment">/*获取当前线程的PCB*/</span><br><span class="hljs-keyword">struct</span> task_struct* <span class="hljs-title function_">running_thread</span><span class="hljs-params">()</span>&#123;<br>    <span class="hljs-type">uint32_t</span> esp;<br>    <span class="hljs-keyword">asm</span>(<span class="hljs-string">&quot;mov %%esp, %0&quot;</span> : <span class="hljs-string">&quot;=g&quot;</span> (esp));<br>    <span class="hljs-keyword">return</span> (<span class="hljs-keyword">struct</span> task_struct*)(esp &amp; <span class="hljs-number">0xfffff000</span>);     <span class="hljs-comment">//各个线程所用的栈都是在自己的PCB中，且我们设定PCB占一页，所以取高20位就是PCB的地址</span><br>&#125;<br><br><span class="hljs-comment">/*将kernel中的main函数完善为主线程*/</span><br><span class="hljs-comment">/*main早已运行，我们在loader进入kernel时mov esp， 0xc009f000, 就是预留PCB的*/</span><br><span class="hljs-comment">/*因此main的PCB地址为0xc009e000，不需要get_kernel_pages额外分配一页*/</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">make_main_thread</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>&#123;<br>    main_thread = running_thread();<br>    init_thread(main_thread, <span class="hljs-string">&quot;main&quot;</span>, <span class="hljs-number">31</span>);<br>    <span class="hljs-comment">//main函数是当前线程，肯定不在准备队列中，因此添加到全部队列中</span><br>    ASSERT(!elem_find(&amp;thread_all_list, &amp;main_thread-&gt;all_list_tag));  <br>    list_append(&amp;thread_all_list, &amp;main_thread-&gt;all_list_tag);       <br>&#125;<br><br><span class="hljs-comment">/*创建优先级为prio的线程，线程名为name，所实行的函数为function(func_arg)*/</span><br><span class="hljs-comment">/*无论是用户的还是内核的线程，PCB都是在内核空间的*/</span><br><span class="hljs-keyword">struct</span> task_struct* <span class="hljs-title function_">thread_start</span><span class="hljs-params">(<span class="hljs-type">char</span>* name, <span class="hljs-type">int</span> prio, thread_func function, <span class="hljs-type">void</span>* func_arg)</span>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span>* <span class="hljs-title">thread</span> =</span> get_kernel_pages(<span class="hljs-number">1</span>);   <span class="hljs-comment">//从内核池分配一页用来存放PCB指针thread，此时thread指向PCB的最低地址</span><br>    init_thread(thread, name, prio);    <span class="hljs-comment">//  初始化线程的基本信息</span><br>    thread_create(thread, function, func_arg);  <span class="hljs-comment">//创建对应的线程栈</span><br><br>    ASSERT(!elem_find(&amp;thread_ready_list, &amp;thread-&gt;general_tag));    <span class="hljs-comment">//确保该线程之前就不在就绪队列中</span><br>    list_append(&amp;thread_ready_list, &amp;thread-&gt;general_tag);       <span class="hljs-comment">//加入就绪队列</span><br><br>    ASSERT(!elem_find(&amp;thread_all_list, &amp;thread-&gt;all_list_tag));    <span class="hljs-comment">//确保该线程之前就不在全部队列中</span><br>    list_append(&amp;thread_all_list, &amp;thread-&gt;all_list_tag);       <span class="hljs-comment">//加入全部线程队列</span><br><br>    <span class="hljs-keyword">return</span> thread;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>调度器主要任务是读写就绪队列，增删里面的节点，节点是PCB里的general_tag，我们的调度机制才用轮询调度，也就是按顺序一个一个执行，线程的prio越大，优先级越高，tick越大，每发生一次时钟中断，tick–，当tick为0时调度器把当前线程换下，选择另一个线程上处理器<br>完整的调度过程需要三部分配合：</p>
+<ol>
+<li>时钟中断处理函数</li>
+<li>调度器schedule</li>
+<li>任务切换函数switch_to</li>
+</ol>
+<p>首先看时钟中断处理函数<br>timer.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">uint32_t</span> ticks;     <span class="hljs-comment">//ticks是内核开启时钟中断以来总共的滴答数</span><br><br><span class="hljs-comment">/*时钟的中断处理函数*/</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">intr_timer_handler</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span>* <span class="hljs-title">cur_thread</span> =</span> running_thread();  <span class="hljs-comment">//获取当前线程的PCB</span><br>    ASSERT(cur_thread -&gt; stack_magic == <span class="hljs-number">0x19870916</span>);        <span class="hljs-comment">//判断该线程的线程栈是否有溢出</span><br>    cur_thread -&gt; elapsed_ticks++;      <span class="hljs-comment">//让当前线程占用cpu的总时间++</span><br>    ticks++;        <span class="hljs-comment">//ticks是内核开启时钟中断以来总共的滴答数</span><br>    <span class="hljs-comment">//如果当前线程的tick用完了，则下CPU，进入调度函数，如果没用完，则继续该线程，并让该线程的tick自减</span><br>    <span class="hljs-keyword">if</span>(cur_thread -&gt; ticks == <span class="hljs-number">0</span>)&#123;<br>        schedule();<br>    &#125;<br>    <span class="hljs-keyword">else</span>&#123;<br>        cur_thread -&gt; ticks--;<br>    &#125;<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">timer_init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    put_str(<span class="hljs-string">&quot;timer_init start!\n&quot;</span>);<br>    frequency_set(COUNTER0_PORT,COUNTER0_NO,READ_WRITE_LATCH,COUNTER_MODE,COUNTER0_VALUE);<br>    register_handler(<span class="hljs-number">0x20</span>, intr_timer_handler);      <span class="hljs-comment">//注册时钟中断处理程序的代码</span><br>    put_str(<span class="hljs-string">&quot;timer_init done!\n&quot;</span>);<br>    <span class="hljs-keyword">return</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>interrupt.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*在中断处理程序数组第vector_no个元素中注册安装中断处理程序funciton*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">register_handler</span><span class="hljs-params">(<span class="hljs-type">uint8_t</span> vector_no, intr_handler function)</span>&#123;<br>    idt_table[vector_no] = function;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>完成时钟中断函数的注册，即写在中断描述符表idt里，当发生时钟中断时，中断向量号为0x20，在idt找到对应的函数入口去执行，每来一次中断便让当前线程的ticks–</p>
+<p>实现任务调度schedule<br>thread.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*实现任务调度:将当前线程换下处理器，并在就绪队列中找到下一个可运行的线程，放上处理器*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">schedule</span><span class="hljs-params">()</span>&#123;<br>    ASSERT(intr_get_status() == INTR_OFF);      <span class="hljs-comment">//？？？为什么要关中断，在哪里关了</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span>* <span class="hljs-title">cur</span> =</span> running_thread();     <span class="hljs-comment">//获取当前线程的PCB</span><br>    <span class="hljs-keyword">if</span>(cur -&gt; status == TASK_RUNNING)&#123;<br>        <span class="hljs-comment">//如果当前线程只是因为时间片到期了，则将其重新放到准备队列中，</span><br>        ASSERT(!elem_find(&amp;thread_ready_list, &amp;cur-&gt;general_tag));<br>        list_append(&amp;thread_ready_list, &amp;cur-&gt;general_tag);<br>        cur -&gt; ticks = cur -&gt; priority;<br>        cur -&gt; status = TASK_READY;<br>    &#125;<br>    <span class="hljs-keyword">else</span>&#123;<br>        <span class="hljs-comment">//如果当前线程还需要某些条件才能重新上CPU，则暂时不放入准备队列中</span><br>    &#125;<br>    ASSERT(!list_empty(&amp;thread_ready_list));    <span class="hljs-comment">//为了避免队列里无线程可用的情况，暂时用断言来保证</span><br>    <span class="hljs-comment">//获取准备队列中的队首线程PCB，将其状态设置为running，并通过switch_to切换寄存器影响</span><br>    thread_tag = list_pop(&amp;thread_ready_list);<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span>* <span class="hljs-title">next</span> =</span> (<span class="hljs-keyword">struct</span> task_struct*)((<span class="hljs-type">uint32_t</span>)thread_tag &amp; <span class="hljs-number">0xfffff000</span>);<br>    next -&gt; status = TASK_RUNNING;<br>    switch_to(cur, next);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>当前线程的ticks为0时，时钟中断会触发schedule函数，该函数将当前线程的generel_tag看情况判断是否重新加入就绪队列中，并把ticks重新更新为prio以便下次轮询到这个线程时能正常使用，并把该线程的状态改为准备态，将该线程从就绪队列中pop出来，把pop后就绪队列的队首的线程作为下一个要上处理器的线程next，更改next的状态为运行态，调用switch_to函数完成切换。</p>
+<p>实现任务切换函数switch_to<br>switch.S</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs x86asm">[<span class="hljs-meta">bits</span> <span class="hljs-number">32</span>]<br><span class="hljs-meta">section</span> .text<br><span class="hljs-meta">global</span> switch_to<br><span class="hljs-symbol">switch_to:</span><br>    <span class="hljs-comment">;栈中此处是返回地址</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">esi</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">edi</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">ebx</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">ebp</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [<span class="hljs-built_in">esp</span> + <span class="hljs-number">20</span>] <span class="hljs-comment">;得到参数cur，参数cur是当前线程的PCB地址</span><br>    <span class="hljs-keyword">mov</span> [<span class="hljs-built_in">eax</span>], <span class="hljs-built_in">esp</span>  <span class="hljs-comment">;把当前栈顶指针存放到cur中，即存放到当前线程PCB的第一个元素，内核栈selt_kstack中</span><br>    <span class="hljs-comment">;--------------以上是保存当前线程的上下文，下面是恢复下一个线程的上下文-----------------</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">eax</span>, [<span class="hljs-built_in">esp</span> + <span class="hljs-number">24</span>] <span class="hljs-comment">;得到栈中的参数next，next是下一个线程的PCB地址</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">esp</span>, [<span class="hljs-built_in">eax</span>]  <span class="hljs-comment">;PCB的第一个成员是当前线程的内核栈，此时esp将会指向下一个线程的内核栈</span><br>    <span class="hljs-keyword">pop</span> <span class="hljs-built_in">ebp</span><br>    <span class="hljs-keyword">pop</span> <span class="hljs-built_in">ebx</span><br>    <span class="hljs-keyword">pop</span> <span class="hljs-built_in">edi</span><br>    <span class="hljs-keyword">pop</span> <span class="hljs-built_in">esi</span><br>    <span class="hljs-keyword">ret</span>             <span class="hljs-comment">;将当前栈顶的值作为返回地址加载到处理器的eip寄存器中，从而使下一个线程的代码恢复执行</span><br></code></pre></td></tr></table></figure>
+
+<p>主要是要做到保护上下文的同时进行切换，我们举个例子来描述切换的过程，从线程cur切换到next</p>
+<ol>
+<li>伴随着每次的时间中断，cur的ticks–，每次发生时钟中断时，其实都要进入中断函数，也需要保护cur的上下文，因为ticks–是发生在中断函数里的，不是发生在cur的函数里，进入中断时的保护，在kernel.S中定义的中断入口程序intr%1entry里面有一些push和pop的指令完成的进入中断的上下文保护。</li>
+<li>当cur的ticks–到0时，则触发schedule函数，进而触发switch_to函数，此时cur可能执行到某一部分便因为时间片不足，需要下处理器，因此要保护好此时的上下文环境，也就是下处理器时cur的上下文环境，以便下一次cur这个线程上处理器时能够继续无瑕疵地完成执行流，调用<code>switch_to(cur, next);</code>时会自动压入参数和返回地址，也就是按顺序压入next，cur，返回地址，然后switch_to函数里会按照ABI原则压入esi，edi，ebx，ebp寄存器，此时esp指向ebp，把此时的esp放入cur的PCB的第一个元素也就是内核栈selt_kstack中。</li>
+<li>通过第2步操作，cur的上下文保护好了，接下来要切换到执行next，也就是恢复next的上下文。将next的PCB的内核栈selt_kstack读取出来给到esp，那么此时esp的值就是之前某个时候next时间片为0时完成第2步的上下文保护时压入的ebp，按顺序pop掉ABI规定的四个寄存器，执行ret，处理器就会跳转到上一次next切换时压入的返回地址处继续执行next的流程。</li>
+<li>如果next是第一次执行，即之前没有过上下文保护的过程，那“将next的PCB的内核栈selt_kstack读取出来给到esp”这个操作中，内核栈selt_kstack的值就是初始化线程时候初始化的值，从初始化代码中可以知道selt_kstack初始化为线程栈的栈顶部分，因此此时esp的值就是next线程栈的栈顶，然后按顺序pop掉ABI规定的四个寄存器，执行ret，便变成了执行函数kernel_thread，这个过程和9.2小结中描述的过程是一样的。</li>
+<li>同样的，next恢复完上下文之后便开始继续执行，当next时间片用完后也要发生切换，当慢慢地再次调度到cur线程时，也是通过cur的PCB的第一个元素也就是内核栈selt_kstack，然后将selt_kstack赋给esp，通过cur返回地址与esp的相对位置找到cur返回地址，再通过ret完成让cur重新上处理器。</li>
+<li>真的很巧妙，每个数据结构设计的都是互相贴合的，要从全局的视角看。</li>
+</ol>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="category-chain-item">从零搭建操作系统</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>“从零搭建操作系统” 第九章 线程</div>
+      <div>https://yigefanqie-beiyi.github.io/2025/01/02/“从零搭建操作系统” 第九章/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Bei</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年1月2日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/12/26/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E5%85%AB%E7%AB%A0/" title="“从零搭建操作系统” 第八章 内存管理系统">
+                        <span class="hidden-mobile">“从零搭建操作系统” 第八章 内存管理系统</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <span>Yi</span> <i class="iconfont icon-love"></i> <span>Yi</span> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
