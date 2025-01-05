@@ -1,0 +1,681 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Bei">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="10.1 锁锁的出现是用来解决多个线程访问公共资源的问题公共资源：可以是公共的内存、硬件等，总之就是被许多任务共享的一套资源临界区：指程序中那些访问公共资源的指令代码互斥：是指任何时刻公共资源只能被单个任务独享，即只能有一个任务在自己的临界区执行（执行临界区的代码也就是访问公共资源），关中断是实现互斥最简单的方法竞争条件：也就是多个任务竞争锁的条件 信号量：是多线程编程中的重要同步工作，锁是其中的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="“从零搭建操作系统” 第十章 输入输出系统">
+<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2025/01/04/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E5%8D%81%E7%AB%A0/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="10.1 锁锁的出现是用来解决多个线程访问公共资源的问题公共资源：可以是公共的内存、硬件等，总之就是被许多任务共享的一套资源临界区：指程序中那些访问公共资源的指令代码互斥：是指任何时刻公共资源只能被单个任务独享，即只能有一个任务在自己的临界区执行（执行临界区的代码也就是访问公共资源），关中断是实现互斥最简单的方法竞争条件：也就是多个任务竞争锁的条件 信号量：是多线程编程中的重要同步工作，锁是其中的">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-01-04T12:50:04.000Z">
+<meta property="article:modified_time" content="2025-01-05T03:06:00.593Z">
+<meta property="article:author" content="Bei">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>“从零搭建操作系统” 第十章 输入输出系统 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yigefanqie-beiyi.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":50,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Bei</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="“从零搭建操作系统” 第十章 输入输出系统"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-01-04 20:50" pubdate>
+          2025年1月4日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          15 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">“从零搭建操作系统” 第十章 输入输出系统</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="10-1-锁"><a href="#10-1-锁" class="headerlink" title="10.1 锁"></a>10.1 锁</h2><p>锁的出现是用来解决多个线程访问公共资源的问题<br>公共资源：可以是公共的内存、硬件等，总之就是被许多任务共享的一套资源<br>临界区：指程序中那些访问公共资源的指令代码<br>互斥：是指任何时刻公共资源只能被单个任务独享，即只能有一个任务在自己的临界区执行（执行临界区的代码也就是访问公共资源），关中断是实现互斥最简单的方法<br>竞争条件：也就是多个任务竞争锁的条件</p>
+<p>信号量：是多线程编程中的重要同步工作，锁是其中的一个应用，信号量用于保证线程顺序执行，资源访问控制，线程间协调，启动与终止控制，构建灵活、高效的并发机制。</p>
+<p>在完成锁的设计之前，我们先完成线程阻塞和解除阻塞的函数<br>thread.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*当前线程将自己阻塞，并把线程状态标记为stat*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">thread_block</span><span class="hljs-params">(<span class="hljs-keyword">enum</span> task_status stat)</span>&#123;<br>    <span class="hljs-comment">//只有TASK_BLOCKED TASK_WAITING TASK_HANGING 这三种状态，才不会被调度</span><br>    ASSERT(((stat == TASK_BLOCKED) || (stat == TASK_WAITING) || stat == TASK_HANGING));<br>    <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">intr_status</span> <span class="hljs-title">old_status</span> =</span> intr_disable();       <span class="hljs-comment">//关中断</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span>* <span class="hljs-title">cur</span> =</span> running_thread();<br>    <span class="hljs-comment">//更改当前线程的状态，这样再进行schedule就不会放到准备队列中，完成阻塞</span><br>    cur -&gt; status = stat;<br>    schedule();<br>    <span class="hljs-comment">//下面代码在阻塞解除之前都不会执行</span><br>    intr_set_status(old_status);<br>&#125;<br><br><span class="hljs-comment">/*将线程pthread解除阻塞*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">thread_unblock</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> task_struct* pthread)</span><br>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">intr_status</span> <span class="hljs-title">old_status</span> =</span> intr_disable();<br>    ASSERT(((pthread-&gt;status == TASK_BLOCKED) || (pthread-&gt;status == TASK_WAITING) || (pthread-&gt;status == TASK_HANGING)));<br>    <span class="hljs-keyword">if</span>(pthread-&gt;status != TASK_READY)<br>    &#123;<br>    	<span class="hljs-comment">//被阻塞线程 不应该存在于就绪队列中）</span><br>    	ASSERT(!elem_find(&amp;thread_ready_list,&amp;pthread-&gt;general_tag));<br>    	<span class="hljs-keyword">if</span>(elem_find(&amp;thread_ready_list,&amp;pthread-&gt;general_tag))<br>    	    PANIC(<span class="hljs-string">&quot;thread_unblock: blocked thread in ready_list\n&quot;</span>); <span class="hljs-comment">//debug.h中定义过</span><br>    	<span class="hljs-comment">//让阻塞了很久的任务放在就绪队列最前面</span><br>    	list_push(&amp;thread_ready_list,&amp;pthread-&gt;general_tag);<br>    	<span class="hljs-comment">//状态改为就绪态</span><br>    	pthread-&gt;status = TASK_READY;<br>    &#125;<br>    intr_set_status(old_status);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在时间片内，线程被换下处理器都是出于主动或资源，因此只有线程自己才能阻塞自己，但阻塞后需要别的线程将自己唤醒<br>接下来完成锁的实现<br>sync.h</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;list.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;stdint.h&quot;</span></span><br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span>;</span>  <span class="hljs-comment">// 前向声明，避免包含 thread.h</span><br><br><span class="hljs-comment">/*信号量结构*/</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">semaphore</span>&#123;</span><br>    <span class="hljs-type">uint8_t</span> value;  <span class="hljs-comment">//信号量值</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list</span> <span class="hljs-title">waiters</span>;</span>    <span class="hljs-comment">//处于该信号量值上等待阻塞的所有线程</span><br>&#125;;<br><br><span class="hljs-comment">/*锁结构*/</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">lock</span>&#123;</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span>* <span class="hljs-title">holder</span>;</span> <span class="hljs-comment">//锁的持有者</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">semaphore</span> <span class="hljs-title">semaphore</span>;</span> <span class="hljs-comment">//锁的信号量</span><br>    <span class="hljs-type">uint32_t</span> holder_repeat_nr;  <span class="hljs-comment">//锁的持有者重复申请锁的次数</span><br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>sync.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;sync.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;list.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;stdint.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;thread.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;debug.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;interrupt.h&quot;</span></span><br><br><span class="hljs-comment">/*初始化信号量*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">sema_init</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> semaphore* psema, <span class="hljs-type">uint8_t</span> value)</span>&#123;<br>    psema -&gt; value = value;<br>    list_init(&amp;psema -&gt; waiters);<br>&#125;<br><br><span class="hljs-comment">/*初始化锁*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">lock_init</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> lock* plock)</span>&#123;<br>    plock -&gt; holder = <span class="hljs-literal">NULL</span>;<br>    plock -&gt; holder_repeat_nr = <span class="hljs-number">0</span>;<br>    sema_init(&amp;plock -&gt; semaphore, <span class="hljs-number">1</span>);<br>&#125;<br><br><span class="hljs-comment">/*信号量down操作*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">sema_down</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> semaphore* psema)</span>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">intr_status</span> <span class="hljs-title">old_status</span> =</span> intr_disable();<br>    <span class="hljs-keyword">while</span>(psema -&gt; value == <span class="hljs-number">0</span>)&#123;<br>        <span class="hljs-comment">//若value为0，表示已经被别人持有</span><br>        ASSERT(!elem_find(&amp;psema-&gt;waiters,&amp;(running_thread()-&gt;general_tag)));<br>        <span class="hljs-comment">//当前的线程不应该在信号量的waiters队列中</span><br>        <span class="hljs-keyword">if</span>(elem_find(&amp;psema-&gt;waiters,&amp;(running_thread()-&gt;general_tag)))<br>    	    PANIC(<span class="hljs-string">&quot;sema_down: seme_down thread already in ready_list\n&quot;</span>);<br>        list_append(&amp;psema-&gt;waiters,&amp;(running_thread()-&gt;general_tag));  <span class="hljs-comment">//添加到等待队列</span><br>    	thread_block(TASK_BLOCKED);                                     <span class="hljs-comment">//阻塞并切换线程</span><br>    &#125;<br>    <span class="hljs-comment">//若value为1或者被唤醒后执行下述代码</span><br>    psema -&gt; value--;<br>    ASSERT(psema-&gt;value == <span class="hljs-number">0</span>);<br>    <span class="hljs-comment">//恢复之前的中断状态</span><br>    intr_set_status(old_status);<br>&#125;<br><br><span class="hljs-comment">//信号量value增加,唤醒线程，把它重新加入准备队列中</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">sema_up</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> semaphore* psema)</span><br>&#123;<br>    <span class="hljs-comment">//关中断，保证原子操作</span><br>    <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">intr_status</span> <span class="hljs-title">old_status</span> =</span> intr_disable();<br>    ASSERT(!psema-&gt;value);<br>    <span class="hljs-keyword">if</span>(!list_empty(&amp;psema-&gt;waiters))<br>    &#123;<br>    	thread_unblock((<span class="hljs-keyword">struct</span> task_struct*)((<span class="hljs-type">uint32_t</span>)list_pop(&amp;psema-&gt;waiters) &amp; <span class="hljs-number">0xfffff000</span>));<br>    &#125;<br>    psema-&gt;value++;<br>    ASSERT(psema-&gt;value == <span class="hljs-number">1</span>);<br>    intr_set_status(old_status);<br>&#125;<br><br><span class="hljs-comment">//获取锁资源</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">lock_acquire</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> lock* plock)</span><br>&#123;<br>    <span class="hljs-keyword">if</span>(plock-&gt;holder != running_thread())<br>    &#123;<br>    	sema_down(&amp;plock-&gt;semaphore);		<span class="hljs-comment">//如果已经被占用 则会被阻塞</span><br>    	plock-&gt;holder = running_thread();	<span class="hljs-comment">//之前被阻塞的线程 继续执行 没被阻塞直接继续即可</span><br>    	ASSERT(!plock-&gt;holder_repeat_nr);<br>    	plock-&gt;holder_repeat_nr = <span class="hljs-number">1</span>;			<span class="hljs-comment">//访问数为1</span><br>    &#125;<br>    <span class="hljs-keyword">else</span>	++plock-&gt;holder_repeat_nr;<br>&#125;<br><br><span class="hljs-comment">//释放锁资源</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">lock_release</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> lock* plock)</span><br>&#123;<br>    ASSERT(plock-&gt;holder == running_thread());	<span class="hljs-comment">//释放锁的线程必须是其拥有者</span><br>    <span class="hljs-keyword">if</span>(plock-&gt;holder_repeat_nr &gt; <span class="hljs-number">1</span>)	<span class="hljs-comment">//减少到的当前一个线程 次数只有一次访问这个锁时 才允许到下面</span><br>    &#123;<br>    	--plock-&gt;holder_repeat_nr;		<br>    	<span class="hljs-keyword">return</span>;<br>    &#125;<br>    ASSERT(plock-&gt;holder_repeat_nr == <span class="hljs-number">1</span>);	<span class="hljs-comment">//举个例子 该线程在拥有锁时 两次获取锁 第二次肯定是无法获取到的</span><br>    						<span class="hljs-comment">//但是必须同样也要有两次release才算彻底释放 不然只有第一次的relase</span><br>    						<span class="hljs-comment">//第二次都不需要release 就直接释放了 肯定是不行的</span><br>    plock-&gt;holder = <span class="hljs-literal">NULL</span>;<br>    plock-&gt;holder_repeat_nr = <span class="hljs-number">0</span>;<br>    sema_up(&amp;plock-&gt;semaphore);   <br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<p>分步讲解一个线程如何获取锁，以看清上述代码：</p>
+<ol>
+<li>首先需要定义一个锁，该锁用来管理某个公共资源，因此需要初始化。理论上该锁应该是全局的。</li>
+<li>某个线程想获得锁，进入临界区，可以调用<code>void lock_acquire(struct lock* plock)</code>函数获取锁的资源<ul>
+<li>判断当前锁的持有者是不是当前申请获得锁的线程</li>
+<li>如果是，说明是这个线程在已经持有锁的情况下重复申请锁，因此锁的holder_repeat_nr需要自加</li>
+<li>如果不是，则该线程调用<code>void sema_down(struct semaphore* psema)</code>函数<ul>
+<li>判断信号量是否已经为0，是则说明锁已经被别人持有，将该线程添加到信号量为0的等待队列中并阻塞</li>
+<li>如果不是，说明信号量为1，要么是锁还未被人持有，要么是锁被人持有后又被释放了</li>
+<li>若value为1或者上述线程阻塞又被唤醒后，执行让信号量自减，说明锁被该线程持有</li>
+<li>恢复之前中断的状态</li>
+</ul>
+</li>
+<li>线程成功获取锁，将锁的持有者改为当前线程，并设置holder_repeat_nr为1</li>
+</ul>
+</li>
+<li>线程执行完临界区后，需要及时释放锁，调用<code>void lock_release(struct lock* plock)</code><ul>
+<li>如果锁的holder_repeat_nr大于1，说明是在获得锁之后重复申请了至少一次的锁，那么释放锁的操作只要让holder_repeat_nr自减就可以</li>
+<li>如果锁的holder_repeat_nr等于1，则清空锁的持有者，并置holder_repeat_nr为0</li>
+<li>调用<code>void sema_up(struct semaphore* psema)</code>使信号量增加<ul>
+<li>解除阻塞，解除的对象是信号量为0的等待队列中的队首的线程</li>
+<li>让信号量自加为1，说明锁可用</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h2 id="10-2-用锁实现终端输出"><a href="#10-2-用锁实现终端输出" class="headerlink" title="10.2 用锁实现终端输出"></a>10.2 用锁实现终端输出</h2><p>上一节实现了锁，这一节来应用锁<br>我们的系统只有一个终端，因此所有输出内容都在这个终端上，因此终端上的显示内容也就作为了公共资源，需要加锁<br>console.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;console.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;print.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;../thread/sync.h&quot;</span></span><br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">lock</span> <span class="hljs-title">console_lock</span>;</span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">console_init</span><span class="hljs-params">()</span><br>&#123;<br>    lock_init(&amp;console_lock);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">console_acquire</span><span class="hljs-params">()</span><br>&#123;<br>    lock_acquire(&amp;console_lock);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">console_release</span><span class="hljs-params">()</span><br>&#123;<br>    lock_release(&amp;console_lock);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">console_put_str</span><span class="hljs-params">(<span class="hljs-type">char</span>* str)</span><br>&#123;<br>    console_acquire();<br>    put_str(str);<br>    console_release();<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">console_put_int</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> num)</span><br>&#123;<br>    console_acquire();<br>    put_int(num);<br>    console_release();<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">console_put_char</span><span class="hljs-params">(<span class="hljs-type">uint8_t</span> chr)</span><br>&#123;<br>    console_acquire();<br>    put_char(chr);<br>    console_release();<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<h2 id="10-3-从键盘上获取输入"><a href="#10-3-从键盘上获取输入" class="headerlink" title="10.3 从键盘上获取输入"></a>10.3 从键盘上获取输入</h2><p>涉及到键盘驱动，以及环形输入缓冲区的设计，即生产者-消费者模型，先暂时跳过</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="category-chain-item">从零搭建操作系统</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>“从零搭建操作系统” 第十章 输入输出系统</div>
+      <div>https://yigefanqie-beiyi.github.io/2025/01/04/“从零搭建操作系统” 第十章/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Bei</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年1月4日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/01/05/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0/" title="“从零搭建操作系统” 第十一章 用户进程">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">“从零搭建操作系统” 第十一章 用户进程</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/01/03/%E2%80%9C%E4%BB%A3%E7%A0%81%E9%9A%8F%E6%83%B3%E5%BD%95%E2%80%9D%20%E6%95%B0%E7%BB%84/" title="“代码随想录” 数组">
+                        <span class="hidden-mobile">“代码随想录” 数组</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <span>Yi</span> <i class="iconfont icon-love"></i> <span>Yi</span> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -21,19 +21,19 @@
   
     <meta name="description" content="2024.12.21跟随《操作系统真象还原》这本书学习，共15章，目前已学完12章，随着对操作系统的深入感觉知识体系过于混乱，决定从头梳理前12章的内容，并记录在blog。 后三章分别是编写硬盘驱动程序，文件系统，系统交互（fork、shell、pipe等），逐渐偏向用户开发而不是内核开发，先吃透内核开发免得和用户开发混在一起。 冬至快乐！ 2024.12.23前三章暂时不细究，细究的话太多硬件知">
 <meta property="og:type" content="article">
-<meta property="og:title" content="“从零搭建操作系统”">
-<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2024/12/21/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E2%80%9D%20%E7%AC%AC%E9%9B%B6%E7%AB%A0/index.html">
+<meta property="og:title" content="“从零搭建操作系统” 前言">
+<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2024/12/21/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E2%80%9D%20%E5%89%8D%E8%A8%80/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="2024.12.21跟随《操作系统真象还原》这本书学习，共15章，目前已学完12章，随着对操作系统的深入感觉知识体系过于混乱，决定从头梳理前12章的内容，并记录在blog。 后三章分别是编写硬盘驱动程序，文件系统，系统交互（fork、shell、pipe等），逐渐偏向用户开发而不是内核开发，先吃透内核开发免得和用户开发混在一起。 冬至快乐！ 2024.12.23前三章暂时不细究，细究的话太多硬件知">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-12-21T09:02:50.000Z">
-<meta property="article:modified_time" content="2025-01-03T07:53:14.383Z">
+<meta property="article:modified_time" content="2025-01-05T13:02:16.606Z">
 <meta property="article:author" content="Bei">
 <meta name="twitter:card" content="summary_large_image">
   
   
   
-  <title>“从零搭建操作系统” - Hexo</title>
+  <title>“从零搭建操作系统” 前言 - Hexo</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -199,7 +199,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="“从零搭建操作系统”"></span>
+            <span id="subtitle" data-typed-text="“从零搭建操作系统” 前言"></span>
           
         </div>
 
@@ -222,7 +222,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          554 字
+          685 字
         
       </span>
     
@@ -233,7 +233,7 @@
         
         
         
-          5 分钟
+          6 分钟
         
       </span>
     
@@ -270,7 +270,7 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">“从零搭建操作系统”</h1>
+            <h1 id="seo-header">“从零搭建操作系统” 前言</h1>
             
             
               <div class="markdown-body">
@@ -288,6 +288,7 @@
 <h3 id="2024-12-26"><a href="#2024-12-26" class="headerlink" title="2024.12.26"></a>2024.12.26</h3><p>完成第七章中断的复习，对8259A和8253两个芯片的复习没有很深，因为感觉这种芯片的使用记不住，只能现用现查<br>大概总结了中断的逻辑，今天就到这<br>明天出差no</p>
 <h3 id="2025-1-2"><a href="#2025-1-2" class="headerlink" title="2025.1.2"></a>2025.1.2</h3><p>新年好<br>出差、跨年回来，重新着手完成了第八章的复习，这一章重点在于后面的内存管理，主要是对各种池如物理内存池虚拟内存池等的应用，但目前只完成了内核内存的分配函数，用户内存的分配比较复杂，以后讨论</p>
 <h3 id="2025-1-3"><a href="#2025-1-3" class="headerlink" title="2025.1.3"></a>2025.1.3</h3><p>完成第九章的复习，多线程的切换对不同栈的设定，以及上下文的保护和恢复真的很巧妙，每次看都会觉得操作系统设计的精密</p>
+<h3 id="2025-1-5"><a href="#2025-1-5" class="headerlink" title="2025.1.5"></a>2025.1.5</h3><p>完成第十章和第十一章的复习<br>第十章就是锁比较重点，主要需要理解信号量；键盘驱动大致看看就行，但是环形缓冲区涉及生产者-消费者原理，可以留意一下。<br>第十一章就很难，用户进程的实现，感觉好像还是有一些地方没搞懂，夸张，实现内核线程已经很麻烦了，结果用户进程更麻烦，不一步一步推导根本看不懂</p>
 
                 
               </div>
@@ -326,8 +327,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>“从零搭建操作系统”</div>
-      <div>https://yigefanqie-beiyi.github.io/2024/12/21/“从零搭建操作系统 ” 第零章/</div>
+      <div>“从零搭建操作系统” 前言</div>
+      <div>https://yigefanqie-beiyi.github.io/2024/12/21/“从零搭建操作系统 ” 前言/</div>
     </div>
     <div class="license-meta">
       
