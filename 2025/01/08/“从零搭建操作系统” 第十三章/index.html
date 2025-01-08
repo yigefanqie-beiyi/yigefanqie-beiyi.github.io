@@ -19,21 +19,28 @@
   <meta name="author" content="Bei">
   <meta name="keywords" content="">
   
-    <meta name="description" content="2024.12.21跟随《操作系统真象还原》这本书学习，共15章，目前已学完12章，随着对操作系统的深入感觉知识体系过于混乱，决定从头梳理前12章的内容，并记录在blog。 后三章分别是编写硬盘驱动程序，文件系统，系统交互（fork、shell、pipe等），逐渐偏向用户开发而不是内核开发，先吃透内核开发免得和用户开发混在一起。 冬至快乐！ 2024.12.23前三章暂时不细究，细究的话太多硬件知">
+    <meta name="description" content="13.1 硬盘及分区表我们在加载最开始的boot.bin的时候，就已经创建了一个硬盘，用于当做系统的启动盘，此后我们的代码都是通过dd命令复制到这个硬盘上，从而正式引导操作系统的启动。 BIOS会在内存的物理地址0x475处存储主机上安装的硬盘数量，在目前的系统上利用bochs执行xp&#x2F;b 0x475可以看到硬盘数量为0x01 利用bochs下的bximage命令，创建一个新的硬盘共80MB，CH">
 <meta property="og:type" content="article">
-<meta property="og:title" content="“从零搭建操作系统” 前言">
-<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2024/12/21/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E2%80%9D%20%E5%89%8D%E8%A8%80/index.html">
+<meta property="og:title" content="“从零搭建操作系统” 第十三章 硬盘驱动">
+<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2025/01/08/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E5%8D%81%E4%B8%89%E7%AB%A0/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="2024.12.21跟随《操作系统真象还原》这本书学习，共15章，目前已学完12章，随着对操作系统的深入感觉知识体系过于混乱，决定从头梳理前12章的内容，并记录在blog。 后三章分别是编写硬盘驱动程序，文件系统，系统交互（fork、shell、pipe等），逐渐偏向用户开发而不是内核开发，先吃透内核开发免得和用户开发混在一起。 冬至快乐！ 2024.12.23前三章暂时不细究，细究的话太多硬件知">
+<meta property="og:description" content="13.1 硬盘及分区表我们在加载最开始的boot.bin的时候，就已经创建了一个硬盘，用于当做系统的启动盘，此后我们的代码都是通过dd命令复制到这个硬盘上，从而正式引导操作系统的启动。 BIOS会在内存的物理地址0x475处存储主机上安装的硬盘数量，在目前的系统上利用bochs执行xp&#x2F;b 0x475可以看到硬盘数量为0x01 利用bochs下的bximage命令，创建一个新的硬盘共80MB，CH">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2024-12-21T09:02:50.000Z">
-<meta property="article:modified_time" content="2025-01-08T08:11:42.988Z">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/13.1.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/13.2.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/13.3.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/13.4.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/13.5.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/13.6.png">
+<meta property="article:published_time" content="2025-01-08T02:00:36.000Z">
+<meta property="article:modified_time" content="2025-01-08T08:10:50.592Z">
 <meta property="article:author" content="Bei">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://yigefanqie-beiyi.github.io/img/13.1.png">
   
   
   
-  <title>“从零搭建操作系统” 前言 - Hexo</title>
+  <title>“从零搭建操作系统” 第十三章 硬盘驱动 - Hexo</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -199,7 +206,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="“从零搭建操作系统” 前言"></span>
+            <span id="subtitle" data-typed-text="“从零搭建操作系统” 第十三章 硬盘驱动"></span>
           
         </div>
 
@@ -210,8 +217,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-12-21 17:02" pubdate>
-          2024年12月21日 下午
+        <time datetime="2025-01-08 10:00" pubdate>
+          2025年1月8日 上午
         </time>
       </span>
     
@@ -222,7 +229,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          910 字
+          1.3k 字
         
       </span>
     
@@ -233,7 +240,7 @@
         
         
         
-          8 分钟
+          11 分钟
         
       </span>
     
@@ -270,28 +277,35 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">“从零搭建操作系统” 前言</h1>
+            <h1 id="seo-header">“从零搭建操作系统” 第十三章 硬盘驱动</h1>
             
             
               <div class="markdown-body">
                 
-                <h3 id="2024-12-21"><a href="#2024-12-21" class="headerlink" title="2024.12.21"></a>2024.12.21</h3><p>跟随《操作系统真象还原》这本书学习，共15章，目前已学完12章，随着对操作系统的深入感觉知识体系过于混乱，决定从头梳理前12章的内容，并记录在blog。</p>
-<p>后三章分别是编写硬盘驱动程序，文件系统，系统交互（fork、shell、pipe等），逐渐偏向用户开发而不是内核开发，先吃透内核开发免得和用户开发混在一起。</p>
-<p>冬至快乐！</p>
-<h3 id="2024-12-23"><a href="#2024-12-23" class="headerlink" title="2024.12.23"></a>2024.12.23</h3><p>前三章暂时不细究，细究的话太多硬件知识基础知识，有点像八股，这次复习重点偏向内核。</p>
-<p>与内核相关的，前三章整体的作用是BIOS-&gt;MBR-&gt;Loader</p>
-<p>需要注意，有些知识如汇编的知识，section，硬盘结构，处理器架构等知识也应该很重要，以后要回来复习。</p>
-<p>第四章跳过了处理器微架构和流水线的知识，以后再补。</p>
-<h3 id="2024-12-25"><a href="#2024-12-25" class="headerlink" title="2024.12.25"></a>2024.12.25</h3><p>完成第五章的复习，跳过了ELF格式的解码以及一些特权级、调用门的介绍<br>要出差，无语。</p>
-<p>第六章没什么特别难的，主要是实现打印函数操控显卡，以及内联汇编的一些知识</p>
-<p>明天再写第七章吧，中断还是比较重要的</p>
-<h3 id="2024-12-26"><a href="#2024-12-26" class="headerlink" title="2024.12.26"></a>2024.12.26</h3><p>完成第七章中断的复习，对8259A和8253两个芯片的复习没有很深，因为感觉这种芯片的使用记不住，只能现用现查<br>大概总结了中断的逻辑，今天就到这<br>明天出差no</p>
-<h3 id="2025-1-2"><a href="#2025-1-2" class="headerlink" title="2025.1.2"></a>2025.1.2</h3><p>新年好<br>出差、跨年回来，重新着手完成了第八章的复习，这一章重点在于后面的内存管理，主要是对各种池如物理内存池虚拟内存池等的应用，但目前只完成了内核内存的分配函数，用户内存的分配比较复杂，以后讨论</p>
-<h3 id="2025-1-3"><a href="#2025-1-3" class="headerlink" title="2025.1.3"></a>2025.1.3</h3><p>完成第九章的复习，多线程的切换对不同栈的设定，以及上下文的保护和恢复真的很巧妙，每次看都会觉得操作系统设计的精密</p>
-<h3 id="2025-1-5"><a href="#2025-1-5" class="headerlink" title="2025.1.5"></a>2025.1.5</h3><p>完成第十章和第十一章的复习<br>第十章就是锁比较重点，主要需要理解信号量；键盘驱动大致看看就行，但是环形缓冲区涉及生产者-消费者原理，可以留意一下。<br>第十一章就很难，用户进程的实现，感觉好像还是有一些地方没搞懂，夸张，实现内核线程已经很麻烦了，结果用户进程更麻烦，不一步一步推导根本看不懂</p>
-<h3 id="2025-1-6"><a href="#2025-1-6" class="headerlink" title="2025.1.6"></a>2025.1.6</h3><p>先再次总结了一下第十一章，进一步地，考虑有三个任务，分别是内核线程A，用户进程B，内核线程C，调度的时候是栈是如何切换的，就这一个问题捋清楚都花了将近两个小时，现在是大致都清楚了，但细节太多，估计以后还需要再复习巩固。</p>
-<h3 id="2025-1-7"><a href="#2025-1-7" class="headerlink" title="2025.1.7"></a>2025.1.7</h3><p>完成第12章的复习，这一章主要是前面部分对系统调用的实现进行了了解，同时完善了堆内存管理，实现了对小内存块的动态分配与释放，涉及到了新的概念arena和内存块</p>
-<h3 id="2025-1-8"><a href="#2025-1-8" class="headerlink" title="2025.1.8"></a>2025.1.8</h3><p>今天开始第13章的学习，接下来只剩下三章了，学习进度可能会放缓，每天学一点，需要把额外的时间拿来刷题，看八股和学c++</p>
+                <h2 id="13-1-硬盘及分区表"><a href="#13-1-硬盘及分区表" class="headerlink" title="13.1 硬盘及分区表"></a>13.1 硬盘及分区表</h2><p>我们在加载最开始的boot.bin的时候，就已经创建了一个硬盘，用于当做系统的启动盘，此后我们的代码都是通过dd命令复制到这个硬盘上，从而正式引导操作系统的启动。</p>
+<p>BIOS会在内存的物理地址0x475处存储主机上安装的硬盘数量，在目前的系统上利用bochs执行<code>xp/b 0x475</code>可以看到硬盘数量为0x01</p>
+<p>利用bochs下的bximage命令，创建一个新的硬盘共80MB，CHS&#x3D;162&#x2F;16&#x2F;63，也就是柱面数162，磁头数16，每个磁道扇区数63，要同时在bochsrc里修改从盘的配置文件，我们将之后的文件系统安装到新的硬盘（从盘）上</p>
+<p>文件系统：运行在操作系统中的软件模块，是操作系统提供的一套管理磁盘文件读写的方法和数据组织、存储形式。管理的对象是文件，管理的范围是分区，因此它建立在分区的基础上，每个分区都可以有不同的文件系统。</p>
+<p>硬盘的分区，面，磁道，扇区：</p>
+<ol>
+<li>分区，从实质上说就是对硬盘的一种格式化，抽象地看，分区类似一个面按照不同的同心圆划分出来的不同区域。</li>
+<li>面，硬盘是由一个或多个圆形薄膜叠加而成的，每个薄膜都有两个面，每个面都可以用来存储数据。每个面由一个专有的读写磁头。</li>
+<li>磁道，在面上的圆周叫做磁道，现在一个面可以有多达50w个磁道，由于磁盘是旋转的，则连续写入的数据是排列在一个圆周上的。各面上磁道号相同的磁道合起来，称为一个柱面(Cylinder)。磁道从外侧计数，所以一般情况下C盘的读写速度最快。</li>
+<li>扇区，一个磁道上可以容纳数KB的数据，而主机读写时往往并不需要一次读写那么多，于是，磁道又被划分成若干段，每段称为一个扇区。一个扇区一般存放512字节的数据。计算机对硬盘的读写，是以扇区为基本单位的。最小读取1个，最多读取256个。 一般一个磁道都被划分为63个扇区，柱面数（磁道数）和磁头数（盘片面数）都取决于实际配置</li>
+</ol>
+<p>因此，硬盘容量&#x3D;每磁道扇区数 * 柱面数 * 磁道数 * 512字节</p>
+<p>重新回顾一下MBR，主引导扇区占512字节，其中前446字节是一些引导信息和硬盘参数，然后是64字节为分区表，最后是2字节的魔数0x55aa，分区表中每个表项相当于分区的描述符，占16字节，因此原则上只能有4个分区。<br>一块硬盘，最开始只能实现4个分区，也就是4个主分区。<br>后来的发展，4个分区不够用了，可以有一个分区作为扩展分区，用它来作为总扩展分区，里面可以分成很多个子扩展分区，每个子扩展分区在逻辑上看相当于一块硬盘。</p>
+<h3 id="13-1-1-利用fdisk命令开始分区"><a href="#13-1-1-利用fdisk命令开始分区" class="headerlink" title="13.1.1 利用fdisk命令开始分区"></a>13.1.1 利用fdisk命令开始分区</h3><ol>
+<li><code>fdisk -l ./slave.img</code>查看当前硬盘的分区表数据<br><img src="/../img/13.1.png" srcset="/img/loading.gif" lazyload><br>可以发现此时分区表是空的，没有别的信息</li>
+<li>利用fdisk开始分区<br><img src="/../img/13.2.png" srcset="/img/loading.gif" lazyload></li>
+<li>最终分区结果如下图：<br><img src="/../img/13.3.png" srcset="/img/loading.gif" lazyload></li>
+</ol>
+<h3 id="13-1-2-磁盘分区表浅析"><a href="#13-1-2-磁盘分区表浅析" class="headerlink" title="13.1.2 磁盘分区表浅析"></a>13.1.2 磁盘分区表浅析</h3><p>磁盘分区表简称DPT，长度为64字节，本质上就是个长度为4的数组，数组元素为16字节</p>
+<p>一块硬盘最开始的一个扇区作为MBR,MBR 的 512 字节包括 464 字节+ 64 字节的分区表 + 2 字节的魔数0x55aa。</p>
+<p>接下来就是各个分区了，各个分区开始的扇区是 OBR， 用来引导操作系统的。（OS Boot Record）</p>
+<p>在扩展分区里，每个子扩展分区在逻辑上看相当于一块硬盘。所以刚开始的一个扇区是MBR,但是要和真正的MBR区分，就叫做 EBR。</p>
+<p>EBR 里有446字节 + 64 字节的分区表 + 2 字节魔数，分区表又指向逻辑分区。</p>
+<p>理论上讲，总扩展分区可以扩展无限个子扩展分区，EBR 中的 64 字节的分区表，有 4 个分区表项，但是只用了 2 个，第一个用于指向逻辑分区，第二个用于链接下一个子扩展分区。（用链表的形式链接）<br><img src="/../img/13.4.png" srcset="/img/loading.gif" lazyload title="MBR OBR EBR的关系"><br><img src="/../img/13.5.png" srcset="/img/loading.gif" lazyload title="分区表结构"><br>根据分区表的结构，我们将slave.img的主引导扇区中的分区表打印出来：<br><img src="/../img/13.6.png" srcset="/img/loading.gif" lazyload title="slave.img的主引导扇区MBR中的分区表"><br>可以看到，由于我们之前只设置了两个分区，分别是主分区1，以及分区4作为总扩展分区，因此只有前16字节和后16字节是有数据的<br>混乱的时候，可以重点看一下图：<strong>MBR OBR EBR的关系</strong></p>
 
                 
               </div>
@@ -330,8 +344,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>“从零搭建操作系统” 前言</div>
-      <div>https://yigefanqie-beiyi.github.io/2024/12/21/“从零搭建操作系统 ” 前言/</div>
+      <div>“从零搭建操作系统” 第十三章 硬盘驱动</div>
+      <div>https://yigefanqie-beiyi.github.io/2025/01/08/“从零搭建操作系统” 第十三章/</div>
     </div>
     <div class="license-meta">
       
@@ -343,7 +357,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2024年12月21日</div>
+          <div>2025年1月8日</div>
         </div>
       
       
@@ -375,18 +389,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2024/12/21/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E4%B8%80%E7%AB%A0/" title="“从零搭建操作系统” 第一章 环境部署">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">“从零搭建操作系统” 第一章 环境部署</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2024/12/18/hello-world/" title="系统命令">
-                        <span class="hidden-mobile">系统命令</span>
+                      <a href="/2025/01/06/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E5%8D%81%E4%BA%8C%E7%AB%A0/" title="“从零搭建操作系统” 第十二章 系统调用和堆内存管理">
+                        <span class="hidden-mobile">“从零搭建操作系统” 第十二章 系统调用和堆内存管理</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

@@ -1,0 +1,714 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Bei">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="12.1 Linux系统调用浅析用户进程有时候也需要一定的能力去完成部分功能，例如在屏幕打印东西，但操作系统不允许用户进程对屏幕进行操作，因此用户进程需要请操作系统帮忙完成这些操作，操作系统会提供不同功能的接口给用户调用，这些接口就是系统调用。 Linux系统调用是用中断门来实现的，通过软中断int来主动发起中断信号，Linux只使用一个中断向量号即0x80来代表所有系统调用，处理器通过触发int">
+<meta property="og:type" content="article">
+<meta property="og:title" content="“从零搭建操作系统” 第十二章 系统调用和堆内存管理">
+<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2025/01/06/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E5%8D%81%E4%BA%8C%E7%AB%A0/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="12.1 Linux系统调用浅析用户进程有时候也需要一定的能力去完成部分功能，例如在屏幕打印东西，但操作系统不允许用户进程对屏幕进行操作，因此用户进程需要请操作系统帮忙完成这些操作，操作系统会提供不同功能的接口给用户调用，这些接口就是系统调用。 Linux系统调用是用中断门来实现的，通过软中断int来主动发起中断信号，Linux只使用一个中断向量号即0x80来代表所有系统调用，处理器通过触发int">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/194fc78882ef32d27438cefb1ca1c744.png">
+<meta property="article:published_time" content="2025-01-06T07:08:26.000Z">
+<meta property="article:modified_time" content="2025-01-07T02:43:43.479Z">
+<meta property="article:author" content="Bei">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://yigefanqie-beiyi.github.io/img/194fc78882ef32d27438cefb1ca1c744.png">
+  
+  
+  
+  <title>“从零搭建操作系统” 第十二章 系统调用和堆内存管理 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yigefanqie-beiyi.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":50,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Bei</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="“从零搭建操作系统” 第十二章 系统调用和堆内存管理"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-01-06 15:08" pubdate>
+          2025年1月6日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          30 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">“从零搭建操作系统” 第十二章 系统调用和堆内存管理</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="12-1-Linux系统调用浅析"><a href="#12-1-Linux系统调用浅析" class="headerlink" title="12.1 Linux系统调用浅析"></a>12.1 Linux系统调用浅析</h2><p>用户进程有时候也需要一定的能力去完成部分功能，例如在屏幕打印东西，但操作系统不允许用户进程对屏幕进行操作，因此用户进程需要请操作系统帮忙完成这些操作，操作系统会提供不同功能的接口给用户调用，这些接口就是系统调用。</p>
+<p>Linux系统调用是用中断门来实现的，通过软中断int来主动发起中断信号，Linux只使用一个中断向量号即0x80来代表所有系统调用，处理器通过触发int 0x80来触发系统调用，在eax中写入子功能号，中断处理程序通过eax的值来判断用户进程申请哪种系统调用。</p>
+<p>现在C运行库glibc提供了一个间接的系统调用，函数原型是<code>int syscall(int number, ...)</code>，输入的第一个参数是系统调用号，后面的…代表支持可变参数；这种调用形式更灵活，用户可以通过统一的形式直接进行系统调用，是当前版本Linux进行系统调用的主要方式。</p>
+<p>也可以通过_syscall进行直接的系统调用，该函数族由操作系统提供，但如今已经被废弃，因为不够灵活，只能最多支持6个参数<br>我们模仿_syscall先实现简单的系统调用</p>
+<h2 id="12-2-系统调用的实现"><a href="#12-2-系统调用的实现" class="headerlink" title="12.2 系统调用的实现"></a>12.2 系统调用的实现</h2><p>操作系统的系统调用相当于一个接口，接口的一端暴露给用户，属于用户空间，接口的另一端是与之对应的内核实现，属于内核空间。以获取用户进程pid为例，用户通过调用<code>getpid</code>函数返回任务pid，这是属于用户进程使用的接口，接口的另一端对应的内核函数才是关键，该内核函数就是系统调用子功能对应的函数<code>sys_getpid</code>，由它负责找出pid。</p>
+<p>分为4个步骤实现一个系统调用：</p>
+<ol>
+<li>用中断号0x80作为系统调用的入口</li>
+<li>在IDT中安装0x80对应的中断描述符，并注册好对应的中断处理例程</li>
+<li>建立系统调用子功能表syscall_table，利用eax寄存器中的子功能号来索引对应处理函数</li>
+<li>用宏实现用户空间系统调用接口_syscall，我们这里只支持最大3个参数的系统调用，因此只需要完成_syscall[0-3]，eax为子功能号，ebx保存第一个参数，ecx保存第二个参数，edx保存第三个参数</li>
+</ol>
+<p>下面根据上述步骤分别实现<br>增加0x80号中断描述符<br>interrupt.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> IDT_DESC_CNT 0x81       <span class="hljs-comment">//目前总共支持的中断数</span></span><br><br><span class="hljs-keyword">extern</span> <span class="hljs-type">uint32_t</span> <span class="hljs-title function_">syscall_handler</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;  <span class="hljs-comment">//系统调用对应的中断入口例程</span><br><br><span class="hljs-comment">/*初始化中断描述符表*/</span><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">idt_desc_init</span><span class="hljs-params">()</span>&#123;<br>    <span class="hljs-type">int</span> i;<br>    <span class="hljs-type">int</span> lastindex = IDT_DESC_CNT - <span class="hljs-number">1</span>;<br>    <span class="hljs-keyword">for</span>(i = <span class="hljs-number">0</span>; i &lt; IDT_DESC_CNT; i++)&#123;<br>        make_idt_desc(&amp;idt[i], IDT_DESC_ATTR_DPL0, intr_entry_table[i]);<br>    &#125;<br>    make_idt_desc(&amp;idt[lastindex], IDT_DESC_ATTR_DPL3,syscall_handler);<br>    put_str(<span class="hljs-string">&quot;idt_desc_init done!\n&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这里要注意的是，给0x80对应的中断描述符初始化时，要将属性中的dpl设置为用户特权级3，这样触发0x80中断时才不会触发GP异常<br>tips：之前进程线程切换的时候不需要将定时中断的中断描述符设置dpl为3，用户进程也能触发，是因为根本不是由用户代码触发的定时器中断，是由硬件触发的，硬件定时器触发的中断不受进程的特权级限制。无论当前进程是在用户态还是内核态，硬件中断（如时钟中断）都会触发并由操作系统内核进行处理。</p>
+<p>实现系统调用接口<br>模仿旧版Linux过时的系统调用接口_syscall<br>syscall.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;syscall.h&quot;</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> _syscall0(NUMBER) (&#123; \</span><br><span class="hljs-meta">    int retval;		\</span><br><span class="hljs-meta">    asm volatile (<span class="hljs-string">&quot;int $0x80&quot;</span> : <span class="hljs-string">&quot;=a&quot;</span>(retval) : <span class="hljs-string">&quot;a&quot;</span>(NUMBER) : <span class="hljs-string">&quot;memory&quot;</span>); retval; \</span><br><span class="hljs-meta">    &#125;)</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> _syscall1(NUMBER, ARG1) (&#123; \</span><br><span class="hljs-meta">    int retval;		\</span><br><span class="hljs-meta">    asm volatile (<span class="hljs-string">&quot;int $0x80&quot;</span> : <span class="hljs-string">&quot;=a&quot;</span>(retval) : <span class="hljs-string">&quot;a&quot;</span>(NUMBER) , <span class="hljs-string">&quot;b&quot;</span>(ARG1) : <span class="hljs-string">&quot;memory&quot;</span>); retval; \</span><br><span class="hljs-meta">    &#125;)</span><br>    <br><span class="hljs-meta">#<span class="hljs-keyword">define</span> _syscall2(NUMBER, ARG1, ARG2) (&#123; \</span><br><span class="hljs-meta">    int retval;		\</span><br><span class="hljs-meta">    asm volatile (<span class="hljs-string">&quot;int $0x80&quot;</span> : <span class="hljs-string">&quot;=a&quot;</span>(retval) : <span class="hljs-string">&quot;a&quot;</span>(NUMBER) , <span class="hljs-string">&quot;b&quot;</span>(ARG1) , <span class="hljs-string">&quot;c&quot;</span>(ARG2): <span class="hljs-string">&quot;memory&quot;</span>); retval; \</span><br><span class="hljs-meta">    &#125;)</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> _syscall3(NUMBER, ARG1, ARG2, ARG3) (&#123; \</span><br><span class="hljs-meta">    int retval;		\</span><br><span class="hljs-meta">    asm volatile (<span class="hljs-string">&quot;int $0x80&quot;</span> : <span class="hljs-string">&quot;=a&quot;</span>(retval) : <span class="hljs-string">&quot;a&quot;</span>(NUMBER) , <span class="hljs-string">&quot;b&quot;</span>(ARG1) , <span class="hljs-string">&quot;c&quot;</span>(ARG2), <span class="hljs-string">&quot;d&quot;</span>(ARG3): <span class="hljs-string">&quot;memory&quot;</span>); retval; \</span><br><span class="hljs-meta">    &#125;)</span><br></code></pre></td></tr></table></figure>
+
+<p>增加0x80号中断处理例程<br>kernel.S</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">global</span> syscall_handler<br><span class="hljs-symbol">syscall_handler:</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-number">0</span>      <span class="hljs-comment">;中断错误码0</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">ds</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">es</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">fs</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">gs</span><br>    <span class="hljs-keyword">pushad</span><br>    <br>    <span class="hljs-keyword">push</span> <span class="hljs-number">0x80</span>			     <span class="hljs-comment">; 不管是否需要参数,都一律压入中断向量号,调试时很方便</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">edx</span>			     <span class="hljs-comment">;第三个参数</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">ecx</span>			     <span class="hljs-comment">;第二个参数</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-built_in">ebx</span>			     <span class="hljs-comment">;第一个参数</span><br>    <br>    <span class="hljs-keyword">call</span> [syscall_table + <span class="hljs-built_in">eax</span>*<span class="hljs-number">4</span>]<br>    <span class="hljs-keyword">add</span>  <span class="hljs-built_in">esp</span>,<span class="hljs-number">12</span><br>    <br>    <span class="hljs-keyword">mov</span> [<span class="hljs-built_in">esp</span> + <span class="hljs-number">8</span>*<span class="hljs-number">4</span>],<span class="hljs-built_in">eax</span>	     <span class="hljs-comment">;返回值给放到eax中 eax前面有 中断号+EDI+ESI+EBP+ESP+EBX+EDX+ECX </span><br>    <span class="hljs-keyword">jmp</span> intr_exit<br></code></pre></td></tr></table></figure>
+
+<p>触发0x80中断时，系统现在idt中找到0x80对应的中断描述符，再根据中断描述符找到系统调用对应的中断例程syscall_handler，然后执行这段函数，根据传入的系统调用号对应系统调用表找到对应函数的入口执行。</p>
+<p>初始化系统调用<br>syscall-init.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> syscall_nr 32</span><br><span class="hljs-keyword">typedef</span> <span class="hljs-type">void</span>* syscall;<br>syscall syscall_table[syscall_nr];<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">syscall_init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    put_str(<span class="hljs-string">&quot;syscall_init start\n&quot;</span>);<br>    syscall_table[SYS_GETPID] = sys_getpid;<br>    syscall_table[SYS_WRITE] = sys_write;<br>    syscall_table[SYS_MALLOC] = sys_malloc;<br>    syscall_table[SYS_FREE] = sys_free;<br>    put_str(<span class="hljs-string">&quot;syscall_init done\n&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>有了系统调用表syscall_table，在表里面分别存入不同系统调用对应的sys_xxx函数，才算真正完成系统调用的编写。</p>
+<h2 id="12-3-实现系统调用write与可变参数的printf"><a href="#12-3-实现系统调用write与可变参数的printf" class="headerlink" title="12.3 实现系统调用write与可变参数的printf"></a>12.3 实现系统调用write与可变参数的printf</h2><p>gcc编译器提供了三个宏，用来帮助需要可变参数的函数</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> va_start(ap,v) ap = (va_list)&amp;v          <span class="hljs-comment">//ap指向第一个固定参数v</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> va_arg(ap,t)   *((t*)(ap +=4))	   <span class="hljs-comment">//ap指向下一个参数并返回其值</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> va_end(ap)	ap = NULL           <span class="hljs-comment">//清空ap</span></span><br></code></pre></td></tr></table></figure>
+
+<p>我们一直使用的printf函数，其实核心在于内部的两个函数：用于格式化的vsprintf函数 和 用于输出到屏幕的write系统调用</p>
+<p>总结一下添加系统调用的三个步骤：</p>
+<ol>
+<li>在syscall.h中添加新的子功能号</li>
+<li>在syscall.c中添加系统调用的用户接口</li>
+<li>在syscall-init.c中添加内核对应的子功能处理函数，并在syscall_table完成注册</li>
+</ol>
+<p>先来实现write系统调用<br>syscall.h</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">SYSCALL_NR</span></span><br><span class="hljs-class">&#123;</span><br>    SYS_GETPID,<br>    SYS_WRITE<br>&#125;;<br><span class="hljs-type">uint32_t</span> <span class="hljs-title function_">write</span><span class="hljs-params">(<span class="hljs-type">char</span>* str)</span>;<br></code></pre></td></tr></table></figure>
+
+<p>syscall.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">uint32_t</span> <span class="hljs-title function_">write</span><span class="hljs-params">(<span class="hljs-type">char</span>* str)</span>&#123;<br>    <span class="hljs-keyword">return</span> _syscall1(SYS_WRITE, str);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>syscall-init.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">uint32_t</span> <span class="hljs-title function_">sys_write</span><span class="hljs-params">(<span class="hljs-type">char</span>* str)</span>&#123;<br>    console_put_str(str);<br>    <span class="hljs-keyword">return</span> <span class="hljs-built_in">strlen</span>(str);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">syscall_init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    put_str(<span class="hljs-string">&quot;syscall_init start\n&quot;</span>);<br>    syscall_table[SYS_GETPID] = sys_getpid;<br>    syscall_table[SYS_WRITE] = sys_write;<br>    put_str(<span class="hljs-string">&quot;syscall_init done\n&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>接下来完成stdio.c，里面就是关于格式化字符串里的格式化部分，核心函数是vsprintf</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;stdio.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;stdint.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;string.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;syscall.h&quot;</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> va_start(ap,v) ap = (va_list)&amp;v          <span class="hljs-comment">//ap指向第一个固定参数v</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> va_arg(ap,t)   *((t*)(ap +=4))	   <span class="hljs-comment">//ap指向下一个参数并返回其值</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> va_end(ap)	ap = NULL           <span class="hljs-comment">//清空ap</span></span><br><br><span class="hljs-comment">//将整型转换成字符</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">itoa</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> value,<span class="hljs-type">char</span>** buf_ptr_addr,<span class="hljs-type">uint8_t</span> base)</span><br>&#123;<br>    <span class="hljs-type">uint32_t</span> m = value % base;<br>    <span class="hljs-type">uint32_t</span> i = value / base;  <span class="hljs-comment">//除数为0即最高位了 输出即可 没到零继续即可</span><br>    <span class="hljs-keyword">if</span>(i)<br>    	itoa(i,buf_ptr_addr,base);<br>    <span class="hljs-keyword">if</span>(m &lt; <span class="hljs-number">10</span>)                  <span class="hljs-comment">//m小于10的数</span><br>    	*((*buf_ptr_addr)++) = m + <span class="hljs-string">&#x27;0&#x27;</span>;<br>    <span class="hljs-keyword">else</span>			 <span class="hljs-comment">//m大于10的数</span><br>    	*((*buf_ptr_addr)++) = m + <span class="hljs-string">&#x27;A&#x27;</span> - <span class="hljs-number">10</span>;<br>&#125;<br><br><span class="hljs-comment">//将带有格式的format转换为纯字符串str</span><br><span class="hljs-type">uint32_t</span> <span class="hljs-title function_">vsprintf</span><span class="hljs-params">(<span class="hljs-type">char</span>* str,<span class="hljs-type">const</span> <span class="hljs-type">char</span>* format,va_list ap)</span><br>&#123;<br>    <span class="hljs-type">char</span>* buf_ptr = str;<br>    <span class="hljs-type">const</span> <span class="hljs-type">char</span>* index_ptr = format;<br>    <span class="hljs-type">char</span> index_char = *index_ptr;<br>    <span class="hljs-type">int32_t</span> arg_int;<br>    <span class="hljs-type">char</span>* arg_str;<br>    <span class="hljs-keyword">while</span>(index_char)		<span class="hljs-comment">//挨个挨个字符来弄</span><br>    &#123;<br>    	<span class="hljs-keyword">if</span>(index_char != <span class="hljs-string">&#x27;%&#x27;</span>)<br>    	&#123;<br>    	    *(buf_ptr++) = index_char;<br>    	    index_char = *(++index_ptr);<br>    	    <span class="hljs-keyword">continue</span>;<br>    	&#125;<br>    	index_char = *(++index_ptr);<br>    	<span class="hljs-keyword">switch</span>(index_char)<br>    	&#123;<br>    	    <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;s&#x27;</span>:<br>    	    	arg_str = va_arg(ap,<span class="hljs-type">char</span>*);<br>    	    	<span class="hljs-built_in">strcpy</span>(buf_ptr,arg_str);<br>    	    	buf_ptr += <span class="hljs-built_in">strlen</span>(arg_str);<br>    	    	index_char = *(++index_ptr);<br>    	    	<span class="hljs-keyword">break</span>;<br>    	    <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;x&#x27;</span>:<br>    	    	arg_int = va_arg(ap,<span class="hljs-type">int</span>);<br>    	    	itoa(arg_int,&amp;buf_ptr,<span class="hljs-number">16</span>);<br>    	    	index_char = *(++index_ptr);<br>    	    	<span class="hljs-keyword">break</span>;<br>    	    <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;d&#x27;</span>:<br>    	    	arg_int = va_arg(ap,<span class="hljs-type">int</span>);<br>    	    	<span class="hljs-keyword">if</span>(arg_int &lt; <span class="hljs-number">0</span>)<br>    	    	&#123;<br>    	    	    arg_int = <span class="hljs-number">0</span> - arg_int;<br>    	    	    *(buf_ptr++) = <span class="hljs-string">&#x27;-&#x27;</span>;<br>    	    	&#125;<br>    	    	itoa(arg_int,&amp;buf_ptr,<span class="hljs-number">10</span>);<br>    	    	index_char = *(++index_ptr);<br>    	    	<span class="hljs-keyword">break</span>;<br>    	    <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;c&#x27;</span>:<br>    	    	*(buf_ptr++) = va_arg(ap,<span class="hljs-type">char</span>);<br>    	    	index_char = *(++index_ptr);<br>    	&#125;<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-built_in">strlen</span>(str);<br>&#125;<br><br><span class="hljs-type">uint32_t</span> <span class="hljs-title function_">printf</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span>* format, ...)</span><br>&#123;<br>    va_list args;<br>    <span class="hljs-type">uint32_t</span> retval;<br>    va_start(args,format);		<span class="hljs-comment">//args指向char* 的指针 方便指向下一个栈参数</span><br>    <span class="hljs-type">char</span> buf[<span class="hljs-number">1024</span>] = &#123;<span class="hljs-number">0</span>&#125;;<br>    retval = <span class="hljs-built_in">vsprintf</span>(buf,format,args);<br>    va_end(args);<br>    write(buf);<br>    <span class="hljs-keyword">return</span> retval;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<h2 id="12-4-完善堆内存管理"><a href="#12-4-完善堆内存管理" class="headerlink" title="12.4 完善堆内存管理"></a>12.4 完善堆内存管理</h2><p>之前我们实现的内存分配都是以页为单位的，每次分配的最小内存是4KB，但当我们只需要使用几十字节之类的小内存时，使用之前的方式就没法满足需求了，因此要引入别的内存管理结构</p>
+<p>引入arena，arena是一个提供内存分配的数据结构，分为两个部分，一部分是元信息，另一部分是内存池区域。<br>元数据用来描述自己内存池中空闲块的数量，大约占12字节</p>
+<p>内存池区域包含许多内存块，我们把每个内存块命名为mem_block，它们是内存分配粒度更细的资源，最终给用户分配的就是这么一个内存块mem_block</p>
+<p>每个类型的arena起始只有一个，会占用1页的内存，只有当某个类型的arena的内存块被分配完毕后，才会创建下一个arena进行分配</p>
+<p>为每一种规格的内存块创建一个内存块描述符，即mem_block_desc，在其中记录内存块规格的大小，以及位于所有同类arena中的空闲内存块链表</p>
+<p>我们这里内存块设计成只有7个规格，即16 32 64 128 256 512 1024字节<br><img src="/../img/194fc78882ef32d27438cefb1ca1c744.png" srcset="/img/loading.gif" lazyload title="arena与mem_block_desc的逻辑关系"></p>
+<p>下面将根据上述原理介绍代码的实现<br>memory.h</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> DESC_CNT 7      <span class="hljs-comment">//内存块描述符的个数</span></span><br><br><span class="hljs-comment">/*内存块*/</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">mem_block</span>&#123;</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_elem</span> <span class="hljs-title">free_elem</span>;</span>     <span class="hljs-comment">//list_elem是链表元素</span><br>&#125;;<br><br><span class="hljs-comment">/*内存块描述符*/</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">mem_block_desc</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">uint32_t</span> block_size;            <span class="hljs-comment">//内存块大小，例如16字节，64字节</span><br>    <span class="hljs-type">uint32_t</span> block_per_arena;       <span class="hljs-comment">//本arena中可容纳此mem_block的数量</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list</span> <span class="hljs-title">free_list</span>;</span>	        <span class="hljs-comment">//目前可用的mem_block链表</span><br>&#125;;<br><br><span class="hljs-comment">/*内存仓库*/</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">arena</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">mem_block_desc</span>* <span class="hljs-title">desc</span>;</span>        <span class="hljs-comment">//此arena关联的mem_block_desc</span><br>    <span class="hljs-type">uint32_t</span> cnt;           <span class="hljs-comment">//large为true，cnt代表页框数，为false，代表空闲mem_block数量</span><br>    <span class="hljs-type">bool</span> large; <br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>memory.c中添加了新的函数和结构</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">mem_block_desc</span> <span class="hljs-title">k_block_descs</span>[<span class="hljs-title">DESC_CNT</span>];</span>  <span class="hljs-comment">//内核内存块描述符数组</span><br><br><span class="hljs-comment">/*内存块初始化*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">block_desc_init</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> mem_block_desc* desc_array)</span><br>&#123;<br>    <span class="hljs-type">uint16_t</span> desc_idx,block_size = <span class="hljs-number">16</span>;<br>    <span class="hljs-keyword">for</span>(desc_idx = <span class="hljs-number">0</span>;desc_idx &lt; DESC_CNT;desc_idx++)<br>    &#123;<br>    	desc_array[desc_idx].block_size = block_size;<br>    	desc_array[desc_idx].block_per_arena = (PG_SIZE - <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> arena)) / block_size;<br>    	list_init(&amp;desc_array[desc_idx].free_list);<br>    	block_size *= <span class="hljs-number">2</span>;<br>    &#125;   <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>进程有自己的空间，为了实现用户进程的堆内存管理，在pcb中增加内存块描述符数组</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*PCB结构体，存储进程或线程的基本信息*/</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span></span><br><span class="hljs-class">&#123;</span><br>    <span class="hljs-type">uint32_t</span>* self_kstack;                          <span class="hljs-comment">//当前线程对应的内核栈</span><br>    <span class="hljs-type">pid_t</span> pid;<br>    <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">task_status</span> <span class="hljs-title">status</span>;</span>                        <span class="hljs-comment">//线程状态</span><br>    <span class="hljs-type">char</span> name[<span class="hljs-number">16</span>];<br>    <span class="hljs-type">uint8_t</span> priority;				      <span class="hljs-comment">//特权级</span><br>    <span class="hljs-type">uint8_t</span> ticks;              <span class="hljs-comment">//每次在处理器上执行的时间滴答数</span><br>    <span class="hljs-type">uint32_t</span> elapsed_ticks;     <span class="hljs-comment">//此任务执行了多久，即此任务从上cpu运行后至今占用了多少cpu滴答数</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_elem</span> <span class="hljs-title">general_tag</span>;</span>       <span class="hljs-comment">//用于线程在一般的队列中的节点</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list_elem</span> <span class="hljs-title">all_list_tag</span>;</span>      <span class="hljs-comment">//用于线程在线程队列中的节点</span><br>    <span class="hljs-type">uint32_t</span>* pgdir;        <span class="hljs-comment">//进程自己页表的虚拟地址</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">virtual_addr</span> <span class="hljs-title">userprog_vaddr</span>;</span>     <span class="hljs-comment">//用户进程的虚拟地址池</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">mem_block_desc</span> <span class="hljs-title">u_block_desc</span>[<span class="hljs-title">DESC_CNT</span>];</span>   <span class="hljs-comment">//用户进程内存块描述符</span><br>    <span class="hljs-type">uint32_t</span> stack_magic;			      <span class="hljs-comment">//越界检查  因为我们pcb上面的就是我们要用的栈了 到时候还要越界检查</span><br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>memory.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">//返回arena中第idx个内存块的地址 空间布局为 arena元信息+n个内存块</span><br><span class="hljs-keyword">struct</span> mem_block* <span class="hljs-title function_">arena2block</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> arena* a,<span class="hljs-type">uint32_t</span> idx)</span><br>&#123;<br>    <span class="hljs-keyword">return</span> (<span class="hljs-keyword">struct</span> mem_block*)((<span class="hljs-type">uint32_t</span>)a + <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> arena) + idx * a-&gt;desc-&gt;block_size);<br>&#125;<br><br><span class="hljs-comment">//返回内存块b所在的arena地址</span><br><span class="hljs-keyword">struct</span> arena* <span class="hljs-title function_">block2arena</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> mem_block* b)</span><br>&#123;<br>    <span class="hljs-keyword">return</span> (<span class="hljs-keyword">struct</span> arena*)((<span class="hljs-type">uint32_t</span>)b &amp; <span class="hljs-number">0xfffff000</span>);<br>&#125;<br><br><span class="hljs-comment">//在堆中申请size字节内存</span><br><span class="hljs-type">void</span>* <span class="hljs-title function_">sys_malloc</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> size)</span><br>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">pool_flags</span> <span class="hljs-title">PF</span>;</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">pool</span>* <span class="hljs-title">mem_pool</span>;</span><br>    <span class="hljs-type">uint32_t</span> pool_size;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">mem_block_desc</span>* <span class="hljs-title">descs</span>;</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span>* <span class="hljs-title">cur_thread</span> =</span> running_thread();<br>    <br>    <span class="hljs-keyword">if</span>(cur_thread-&gt;pgdir == <span class="hljs-literal">NULL</span>)<br>    &#123;<br>    	PF = PF_KERNEL;<br>    	pool_size = kernel_pool.pool_size;<br>    	mem_pool = &amp;kernel_pool;<br>    	descs = k_block_descs;<br>    &#125;<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>    	PF = PF_USER;<br>    	pool_size = user_pool.pool_size;<br>    	mem_pool = &amp;user_pool;<br>    	descs = cur_thread-&gt;u_block_desc;<br>    &#125;<br>    <span class="hljs-comment">//size 超出空间大小或者为 0 负数</span><br>    <span class="hljs-keyword">if</span>(!(size &gt; <span class="hljs-number">0</span> &amp;&amp; size &lt; pool_size))<br>    &#123;<br>    	<span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br>    &#125;<br>    <br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">arena</span>* <span class="hljs-title">a</span>;</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">mem_block</span>* <span class="hljs-title">b</span>;</span><br>    lock_acquire(&amp;mem_pool-&gt;lock);<br>    <br>    <span class="hljs-comment">//超过页框直接分配页框</span><br>    <span class="hljs-keyword">if</span>(size &gt; <span class="hljs-number">1024</span>)<br>    &#123;<br>    	<span class="hljs-type">uint32_t</span> page_cnt = DIV_ROUND_UP(size + <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> arena),PG_SIZE);<br>    	a = malloc_page(PF,page_cnt);<br>    	<span class="hljs-keyword">if</span>(a != <span class="hljs-literal">NULL</span>)<br>    	&#123;<br>    	    <span class="hljs-built_in">memset</span>(a,<span class="hljs-number">0</span>,page_cnt * PG_SIZE);<br>	    a-&gt;desc = <span class="hljs-literal">NULL</span>;<br>	    a-&gt;cnt  = page_cnt;<br>	    a-&gt;large = <span class="hljs-literal">true</span>;    <br>	    lock_release(&amp;mem_pool-&gt;lock);<br>	    <span class="hljs-keyword">return</span> (<span class="hljs-type">void</span>*)(a+<span class="hljs-number">1</span>); <span class="hljs-comment">//返回地址 struct arena + sizeof(struct arena)</span><br>	&#125;<br>	<span class="hljs-keyword">else</span><br>	&#123;<br>	    lock_release(&amp;mem_pool-&gt;lock);<br>	    <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br>	&#125;<br>    &#125;<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>    	<span class="hljs-type">uint8_t</span> desc_idx;<br>    	<span class="hljs-keyword">for</span>(desc_idx = <span class="hljs-number">0</span>;desc_idx &lt; DESC_CNT;desc_idx++)<br>    	&#123;<br>    	    <span class="hljs-keyword">if</span>(size &lt;= descs[desc_idx].block_size)<br>    	    &#123;<br>    	    	<span class="hljs-keyword">break</span>;<br>    	    &#125;<br>    	&#125;<br>    	<br>    	<span class="hljs-comment">//已经空了</span><br>    	<span class="hljs-keyword">if</span>(list_empty(&amp;descs[desc_idx].free_list))<br>    	&#123;<br>    	    a = malloc_page(PF,<span class="hljs-number">1</span>);<br>    	    <span class="hljs-keyword">if</span>(a == <span class="hljs-literal">NULL</span>)<br>    	    &#123;<br>    	    	lock_release(&amp;mem_pool-&gt;lock);<br>    	    	<span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br>    	    &#125;<br>    	    <span class="hljs-built_in">memset</span>(a,<span class="hljs-number">0</span>,PG_SIZE);<br>    	    <br>    	    a-&gt;desc = &amp;descs[desc_idx];<br>    	    a-&gt;large = <span class="hljs-literal">false</span>;<br>    	    a-&gt;cnt = descs[desc_idx].block_per_arena;<br>    	    <span class="hljs-type">uint32_t</span> block_idx;<br>    	    <br>    	    <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">intr_status</span> <span class="hljs-title">old_status</span> =</span> intr_disable();<br>    	    <br>    	    <span class="hljs-keyword">for</span>(block_idx = <span class="hljs-number">0</span>;block_idx &lt; descs[desc_idx].block_per_arena;++block_idx)<br>    	    &#123;<br>    	    	b = arena2block(a,block_idx);<br>    	    	ASSERT(!elem_find(&amp;a-&gt;desc-&gt;free_list,&amp;b-&gt;free_elem));<br>    	    	list_append(&amp;a-&gt;desc-&gt;free_list,&amp;b-&gt;free_elem);<br>    	    &#125;<br>    	    intr_set_status(old_status);<br>    	&#125;<br>    	<br>    	b = (<span class="hljs-keyword">struct</span> mem_block*)list_pop(&amp;(descs[desc_idx].free_list));<br>    	<span class="hljs-built_in">memset</span>(b,<span class="hljs-number">0</span>,descs[desc_idx].block_size);<br>    	<br>    	a = block2arena(b);<br>    	--a-&gt;cnt;<br>    	lock_release(&amp;mem_pool-&gt;lock);<br>    	<span class="hljs-keyword">return</span> (<span class="hljs-type">void</span>*)b;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="12-5-内存的释放"><a href="#12-5-内存的释放" class="headerlink" title="12.5 内存的释放"></a>12.5 内存的释放</h2><p>堆的内存分配后，应该要及时回收内存，也就是内存的释放，与分配内存时的步骤完全相反即可</p>
+<ol>
+<li>在物理地址池中释放物理页地址</li>
+<li>在页表中去掉虚拟地址的映射，将虚拟地址对应的pte的P位置0</li>
+<li>在虚拟地址池中释放虚拟地址</li>
+</ol>
+<p>memory.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*将物理地址pg_phy_addr回收到物理内存池*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">pfree</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> pg_phy_addr)</span><br>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">pool</span>* <span class="hljs-title">mem_pool</span>;</span><br>    <span class="hljs-type">uint32_t</span> bit_idx = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">if</span>(pg_phy_addr &gt;= user_pool.phy_addr_start)<br>    &#123;<br>    	mem_pool = &amp;user_pool;<br>    	bit_idx = (pg_phy_addr - user_pool.phy_addr_start) / PG_SIZE;<br>    &#125;<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>    	mem_pool = &amp;kernel_pool;<br>    	bit_idx = (pg_phy_addr - kernel_pool.phy_addr_start) / PG_SIZE;<br>    &#125;<br>    bitmap_set(&amp;mem_pool-&gt;pool_bitmap,bit_idx,<span class="hljs-number">0</span>);	<span class="hljs-comment">//全部置0</span><br>&#125;<br><br><span class="hljs-comment">/*去掉页表中虚拟地址vaddr的映射，只去掉vaddr对应的pte*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">page_table_pte_remove</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> vaddr)</span><br>&#123;<br>    <span class="hljs-type">uint32_t</span>* pte = pte_ptr(vaddr);<br>    *pte = ~PG_P_1;<br>    <span class="hljs-keyword">asm</span> <span class="hljs-title function_">volatile</span><span class="hljs-params">(<span class="hljs-string">&quot;invlpg %0&quot;</span>::<span class="hljs-string">&quot;m&quot;</span>(vaddr):<span class="hljs-string">&quot;memory&quot;</span>)</span>;	<span class="hljs-comment">//更新tlb</span><br>&#125;<br><br><span class="hljs-comment">/*在虚拟地址池中释放以_vaddr起始的连续pg_cnt个虚拟页地址*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">vaddr_remove</span><span class="hljs-params">(<span class="hljs-keyword">enum</span> pool_flags pf,<span class="hljs-type">void</span>* _vaddr,<span class="hljs-type">uint32_t</span> pg_cnt)</span><br>&#123;<br>    <span class="hljs-type">uint32_t</span> bit_idx_start = <span class="hljs-number">0</span>,vaddr = (<span class="hljs-type">uint32_t</span>)_vaddr,cnt = <span class="hljs-number">0</span>;<br>    <br>    <span class="hljs-keyword">if</span>(pf == PF_KERNEL)<br>    &#123;<br>    	bit_idx_start = (vaddr - kernel_vaddr.vaddr_start) / PG_SIZE;<br>    	<span class="hljs-keyword">while</span>(cnt &lt; pg_cnt)<br>    	&#123;<br>    	    bitmap_set(&amp;kernel_vaddr.vaddr_bitmap,bit_idx_start + (cnt++),<span class="hljs-number">0</span>);<br>    	&#125;<br>    &#125;<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>    	<span class="hljs-keyword">struct</span> task_struct* cur_thread = running_thread();<br>    	bit_idx_start = (vaddr - cur_thread-&gt;userprog_vaddr.vaddr_start) / PG_SIZE;<br>    	<span class="hljs-keyword">while</span>(cnt &lt; pg_cnt)<br>    	&#123;<br>    	    bitmap_set(&amp;cur_thread-&gt;userprog_vaddr.vaddr_bitmap,bit_idx_start + (cnt++),<span class="hljs-number">0</span>);<br>    	&#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">/*释放以虚拟地址vaddr为起始的cnt个物理页框*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">mfree_page</span><span class="hljs-params">(<span class="hljs-keyword">enum</span> pool_flags pf,<span class="hljs-type">void</span>* _vaddr,<span class="hljs-type">uint32_t</span> pg_cnt)</span><br>&#123;<br>    <span class="hljs-type">uint32_t</span> pg_phy_addr;<br>    <span class="hljs-type">uint32_t</span> vaddr = (<span class="hljs-type">int32_t</span>)_vaddr,page_cnt = <span class="hljs-number">0</span>;<br>    ASSERT(pg_cnt &gt;= <span class="hljs-number">1</span> &amp;&amp; vaddr % PG_SIZE == <span class="hljs-number">0</span>);<br>    pg_phy_addr = addr_v2p(vaddr);<br>    <br>    ASSERT((pg_phy_addr % PG_SIZE) == <span class="hljs-number">0</span> &amp;&amp; pg_phy_addr &gt;= <span class="hljs-number">0x102000</span>);<br>    <br>    <span class="hljs-keyword">if</span>(pg_phy_addr &gt;= user_pool.phy_addr_start)<br>    &#123;<br>    	vaddr -= PG_SIZE;<br>    	<span class="hljs-keyword">while</span>(page_cnt &lt; pg_cnt)<br>    	&#123;<br>    	    vaddr += PG_SIZE;<br>    	    pg_phy_addr = addr_v2p(vaddr);<br>    	    ASSERT((pg_phy_addr % PG_SIZE) == <span class="hljs-number">0</span> &amp;&amp; pg_phy_addr &gt;= user_pool.phy_addr_start);<br>    	    pfree(pg_phy_addr);<br>    	    page_table_pte_remove(vaddr);<br>    	    page_cnt++;<br>    	&#125;<br>    	vaddr_remove(pf,_vaddr,pg_cnt);<br>   &#125;<br>   <span class="hljs-keyword">else</span><br>   &#123;<br>   	vaddr -= PG_SIZE;<br>   	<span class="hljs-keyword">while</span>(page_cnt &lt; pg_cnt)<br>   	&#123;<br>   	    vaddr += PG_SIZE;<br>   	    pg_phy_addr = addr_v2p(vaddr);<br>   	    ASSERT((pg_phy_addr % PG_SIZE) == <span class="hljs-number">0</span> &amp;&amp; pg_phy_addr &gt;= kernel_pool.phy_addr_start &amp;&amp; pg_phy_addr &lt; user_pool.phy_addr_start);<br>   	    pfree(pg_phy_addr);<br>   	    page_table_pte_remove(vaddr);<br>   	    page_cnt++;<br>   	&#125;<br>   	vaddr_remove(pf,_vaddr,pg_cnt);<br>   &#125;<br>&#125;<br><br><span class="hljs-comment">/*回收内存ptr*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">sys_free</span><span class="hljs-params">(<span class="hljs-type">void</span>* ptr)</span><br>&#123;<br>    ASSERT(ptr != <span class="hljs-literal">NULL</span>);<br>    <span class="hljs-keyword">if</span>(ptr != <span class="hljs-literal">NULL</span>)<br>    &#123;<br>    	<span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">pool_flags</span> <span class="hljs-title">PF</span>;</span><br>    	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">pool</span>* <span class="hljs-title">mem_pool</span>;</span><br>    	<br>    	<span class="hljs-keyword">if</span>(running_thread()-&gt;pgdir == <span class="hljs-literal">NULL</span>)<br>    	&#123;<br>    	    ASSERT((<span class="hljs-type">uint32_t</span>)ptr &gt;= K_HEAP_START);<br>    	    PF = PF_KERNEL;<br>    	    mem_pool = &amp;kernel_pool;<br>    	&#125;<br>    	<span class="hljs-keyword">else</span><br>    	&#123;<br>    	    PF = PF_USER;<br>    	    mem_pool = &amp;user_pool;<br>    	&#125;<br>    	<br>    	lock_acquire(&amp;mem_pool-&gt;lock);<br>    	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">mem_block</span>* <span class="hljs-title">b</span> =</span> ptr;<br>    	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">arena</span>* <span class="hljs-title">a</span> =</span> block2arena(b);<br>    	<br>    	ASSERT(a-&gt;large == <span class="hljs-number">0</span> || a-&gt;large == <span class="hljs-number">1</span>);<br>    	<span class="hljs-keyword">if</span>(a-&gt;desc == <span class="hljs-literal">NULL</span> &amp;&amp; a-&gt;large == <span class="hljs-literal">true</span>)<br>    	&#123;<br>    	    mfree_page(PF,a,a-&gt;cnt);<br>    	&#125;<br>    	<span class="hljs-keyword">else</span><br>    	&#123;<br>    	    list_append(&amp;a-&gt;desc-&gt;free_list,&amp;b-&gt;free_elem);<br>    	    <span class="hljs-keyword">if</span>(++a-&gt;cnt == a-&gt;desc-&gt;block_per_arena)<br>    	    &#123;<br>    	    	<span class="hljs-type">uint32_t</span> block_idx;<br>    	    	<span class="hljs-keyword">for</span>(block_idx = <span class="hljs-number">0</span>;block_idx &lt; a-&gt;desc-&gt;block_per_arena;block_idx++)<br>    	    	&#123;<br>    	    	    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">mem_block</span>* <span class="hljs-title">b</span> =</span> arena2block(a,block_idx);<br>    	    	    ASSERT(elem_find(&amp;a-&gt;desc-&gt;free_list,&amp;b-&gt;free_elem));<br>    	    	    list_remove(&amp;b-&gt;free_elem);<br>    	    	&#125;<br>    	    	mfree_page(PF,a,<span class="hljs-number">1</span>);<br>    	    &#125;<br>    	&#125;<br>    	lock_release(&amp;mem_pool-&gt;lock);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="category-chain-item">从零搭建操作系统</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>“从零搭建操作系统” 第十二章 系统调用和堆内存管理</div>
+      <div>https://yigefanqie-beiyi.github.io/2025/01/06/“从零搭建操作系统” 第十二章/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Bei</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年1月6日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/01/08/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E5%8D%81%E4%B8%89%E7%AB%A0/" title="“从零搭建操作系统” 第十三章 硬盘驱动">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">“从零搭建操作系统” 第十三章 硬盘驱动</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/01/05/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0/" title="“从零搭建操作系统” 第十一章 用户进程">
+                        <span class="hidden-mobile">“从零搭建操作系统” 第十一章 用户进程</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <span>Yi</span> <i class="iconfont icon-love"></i> <span>Yi</span> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
