@@ -27,7 +27,7 @@
 <meta property="og:description" content="第三章 处理数据 一般在32位系统和64位系统上，int类型通常是32位，即4个字节，在某些嵌入式系统或老旧架构上，可能是16位 头文件climits定义了很多符号常量来表示对类型的限制，例如INT_MAX表示int类型的最大值 c++11对单值变量的另一种初始化方式：利用大括号初始化器，如int a&#123;5&#125;   &#x2F;&#x2F;a初始化为5，特点： 采用这种方式时，可以使用&#x3D;连接">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-01-09T08:42:03.000Z">
-<meta property="article:modified_time" content="2025-01-09T12:43:42.091Z">
+<meta property="article:modified_time" content="2025-01-11T13:13:25.565Z">
 <meta property="article:author" content="Bei">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -222,7 +222,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          684 字
+          1.9k 字
         
       </span>
     
@@ -233,7 +233,7 @@
         
         
         
-          6 分钟
+          16 分钟
         
       </span>
     
@@ -299,6 +299,58 @@
 <li>强制转换的格式如下：<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">(<span class="hljs-type">int</span>) x     <span class="hljs-comment">//C风格</span><br><span class="hljs-type">int</span>(x)      <span class="hljs-comment">//纯粹C++风格</span><br></code></pre></td></tr></table></figure>
 使用第二种c++风格，想法是，让强制类型转换看起来像是函数调用。</li>
 </ol>
+<h1 id="第四章-复合类型"><a href="#第四章-复合类型" class="headerlink" title="第四章 复合类型"></a>第四章 复合类型</h1><h2 id="4-1-数组"><a href="#4-1-数组" class="headerlink" title="4.1 数组"></a>4.1 数组</h2><ol>
+<li>只有在定义数组时才能使用初始化，此后就不能使用了，也不能将一个数组赋给另一个数组</li>
+<li>初始化数组时，提供的值可以少于数组的元素数目，空缺的会自动补0</li>
+<li>如果初始化为{1}，则第一个元素为1，后面元素为0<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> a[<span class="hljs-number">5</span>] = &#123;<span class="hljs-number">0</span>&#125;;     <span class="hljs-comment">//第一个元素被赋值0，后面的元素默认补充为0</span><br><span class="hljs-type">int</span> b[<span class="hljs-number">5</span>] = &#123;<span class="hljs-number">1</span>&#125;;     <span class="hljs-comment">//第一个元素被赋值为1，后面的元素默认补充为0</span><br></code></pre></td></tr></table></figure></li>
+<li>c++11数组的初始化：<ul>
+<li>初始化数组时，可省略&#x3D;号</li>
+<li>可不在大括号内包含任何东西，这会默认所有元素设置为0</li>
+<li>禁止缩窄转换</li>
+</ul>
+</li>
+<li>浮点数转换为整数是缩窄操作</li>
+</ol>
+<h2 id="4-2-字符串"><a href="#4-2-字符串" class="headerlink" title="4.2 字符串"></a>4.2 字符串</h2><ol>
+<li>C利用字符数组来定义一个字符串，我们来看以下代码：<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">char</span> a = <span class="hljs-string">&#x27;S&#x27;</span>;   <span class="hljs-comment">//正确</span><br><span class="hljs-type">char</span> b = <span class="hljs-string">&quot;S&quot;</span>;   <span class="hljs-comment">//错误，因为&quot;S&quot;是字符串，实际上包括&#x27;S&#x27;和&#x27;\0&#x27;，并且&quot;S&quot;表示的是字符&#x27;S&#x27;所在的地址，这个操作将地址赋给字符，明显是错的</span><br></code></pre></td></tr></table></figure></li>
+<li>c++允许拼接字符串字面值，即将两个用引号括起的字符串合并为一个</li>
+<li><code>sizeof</code>函数计算整个数组的大小，<code>strlen</code>函数计算数组内字符串的长度，并且是可见字符，不包括\0。</li>
+</ol>
+<h2 id="4-3-string类简介"><a href="#4-3-string类简介" class="headerlink" title="4.3 string类简介"></a>4.3 string类简介</h2><ol>
+<li>c++提供string类，可以更方便操作字符串</li>
+<li>可以使用C风格字符串来初始化string对象，string与字符数组最大的区别就是，可以将string对象声明为简单变量，而不是一个数组</li>
+<li>可以使用cin和cout来直接操纵string</li>
+<li>也可以使用数组表示法来操控string里的某个字符</li>
+<li>可以通过<code>str1 = str2 + str3;</code>拼接字符</li>
+<li>string具有自动调整大小的功能</li>
+</ol>
+<h2 id="4-4-结构体"><a href="#4-4-结构体" class="headerlink" title="4.4 结构体"></a>4.4 结构体</h2><ol>
+<li>结构体比数组更灵活，可以存储不同类型的数据，结构体是c++OOP的基石</li>
+<li>结构体的初始化，可以和数组一样，用大括号括起来，例如<code>student a = &#123;&quot;xiaoming&quot;, 5, 0.5&#125;;</code></li>
+</ol>
+<h2 id="4-5-共用体"><a href="#4-5-共用体" class="headerlink" title="4.5 共用体"></a>4.5 共用体</h2><ol>
+<li>共用体是一种数据格式，能够存储不同的数据类型，但只能同时存储一个类型</li>
+<li>定义的方式和结构体类似，把struct换成union</li>
+<li>匿名共用体没有名称，其成员将成为位于相同地址的变量</li>
+<li>共用体常用于节省内存</li>
+<li>举了个例子：下述代码中的test只能在同一时间拥有一个类型的变量，换种说法，共用体就是一个变量，但是可以表示定义内的三种类型<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-keyword">union</span> <span class="hljs-title class_">test</span>&#123;<br>    <span class="hljs-type">int</span> a;<br>    <span class="hljs-type">char</span> b;<br>    <span class="hljs-type">bool</span> c;<br>&#125;;<br></code></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="4-6-枚举"><a href="#4-6-枚举" class="headerlink" title="4.6 枚举"></a>4.6 枚举</h2><ol>
+<li>枚举量是整型的话，可被提升为int类型，但int类型不能自动转换为枚举类型</li>
+<li>一般而言省略枚举类型的名称，只是用来定义相关的符号常量</li>
+</ol>
+<h2 id="4-7-指针和自由存储空间"><a href="#4-7-指针和自由存储空间" class="headerlink" title="4.7 指针和自由存储空间"></a>4.7 指针和自由存储空间</h2><ol>
+<li>OOP强调的是在运行阶段（而不是编译阶段）进行决策。例如一个数组，如果在编译阶段定死了容量只有20，那么如果运行时需要200个元素就会报错，如果定死容量在200，那么容易浪费空间。C++采用关键字new请求正确数量的内存分配以及使用指针来跟踪新分配的内存。</li>
+<li><code>int* x, y;      //创建的是一个int*的变量和一个int的变量</code>   <code>int* x, *y;      //创建的是两个int*的变量</code> </li>
+<li>C++在创建指针时，计算机将分配用来存储地址的内存，但不会分配用来存储指针所指向数据的内存，例如下述经典错误：<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-type">int</span>* x;<br>*x = <span class="hljs-number">2233</span>;<br></code></pre></td></tr></table></figure>
+该代码是错误的，x确实是个指针，但并没有分配好指向哪里。</li>
+<li>一定要在*指针之前，将指针初始化为一个确定的、适当的地址</li>
+<li>指针真正的用武之地在于，在运行阶段分配未命名的内存以存储值</li>
+<li>常规变量定义时的值一般存储在栈上，new分配的内存块通常在堆上</li>
+<li>使用new创建数组时，要注意delete的时候加中括号<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-type">int</span>* x = <span class="hljs-keyword">new</span> <span class="hljs-type">int</span> [<span class="hljs-number">10</span>];<br><span class="hljs-keyword">delete</span> [] x;        <span class="hljs-comment">//方括号告诉程序，应该释放整个数组，而不是指针指向的元素</span><br></code></pre></td></tr></table></figure></li>
+</ol>
+<h1 id="第五章-循环和关系表达式"><a href="#第五章-循环和关系表达式" class="headerlink" title="第五章 循环和关系表达式"></a>第五章 循环和关系表达式</h1><p>感觉基本都会了，跳过跳过</p>
+<h1 id="第六章-分支语句和逻辑运算符"><a href="#第六章-分支语句和逻辑运算符" class="headerlink" title="第六章 分支语句和逻辑运算符"></a>第六章 分支语句和逻辑运算符</h1><p>好像也都会了，就里面涉及与cin和cout相似的文件操作不怎么熟，也跳过跳过</p>
 
                 
               </div>
