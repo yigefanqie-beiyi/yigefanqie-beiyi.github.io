@@ -21,19 +21,19 @@
   
     <meta name="description" content="第三章 处理数据 一般在32位系统和64位系统上，int类型通常是32位，即4个字节，在某些嵌入式系统或老旧架构上，可能是16位 头文件climits定义了很多符号常量来表示对类型的限制，例如INT_MAX表示int类型的最大值 c++11对单值变量的另一种初始化方式：利用大括号初始化器，如int a&#123;5&#125;   &#x2F;&#x2F;a初始化为5，特点： 采用这种方式时，可以使用&#x3D;连接">
 <meta property="og:type" content="article">
-<meta property="og:title" content="“C++ Primer Plus” 笔记记录">
-<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2025/01/09/%E2%80%9CC++%20Primer%20Plus%E2%80%9D%20%E7%AC%94%E8%AE%B0%E8%AE%B0%E5%BD%95/index.html">
+<meta property="og:title" content="“C++ Primer Plus” 第一到七章 笔记总结">
+<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2025/01/09/%E2%80%9CC++%20Primer%20Plus%E2%80%9D%20%E7%AC%AC%E4%B8%80%E5%88%B0%E4%B8%83%E7%AB%A0%20%E7%AC%94%E8%AE%B0%E6%80%BB%E7%BB%93/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="第三章 处理数据 一般在32位系统和64位系统上，int类型通常是32位，即4个字节，在某些嵌入式系统或老旧架构上，可能是16位 头文件climits定义了很多符号常量来表示对类型的限制，例如INT_MAX表示int类型的最大值 c++11对单值变量的另一种初始化方式：利用大括号初始化器，如int a&#123;5&#125;   &#x2F;&#x2F;a初始化为5，特点： 采用这种方式时，可以使用&#x3D;连接">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-01-09T08:42:03.000Z">
-<meta property="article:modified_time" content="2025-01-11T13:13:25.565Z">
+<meta property="article:modified_time" content="2025-01-12T09:36:47.017Z">
 <meta property="article:author" content="Bei">
 <meta name="twitter:card" content="summary_large_image">
   
   
   
-  <title>“C++ Primer Plus” 笔记记录 - Hexo</title>
+  <title>“C++ Primer Plus” 第一到七章 笔记总结 - Hexo</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -199,7 +199,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="“C++ Primer Plus” 笔记记录"></span>
+            <span id="subtitle" data-typed-text="“C++ Primer Plus” 第一到七章 笔记总结"></span>
           
         </div>
 
@@ -222,7 +222,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.9k 字
+          2.5k 字
         
       </span>
     
@@ -233,7 +233,7 @@
         
         
         
-          16 分钟
+          21 分钟
         
       </span>
     
@@ -270,7 +270,7 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">“C++ Primer Plus” 笔记记录</h1>
+            <h1 id="seo-header">“C++ Primer Plus” 第一到七章 笔记总结</h1>
             
             
               <div class="markdown-body">
@@ -350,7 +350,21 @@
 <li>使用new创建数组时，要注意delete的时候加中括号<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-type">int</span>* x = <span class="hljs-keyword">new</span> <span class="hljs-type">int</span> [<span class="hljs-number">10</span>];<br><span class="hljs-keyword">delete</span> [] x;        <span class="hljs-comment">//方括号告诉程序，应该释放整个数组，而不是指针指向的元素</span><br></code></pre></td></tr></table></figure></li>
 </ol>
 <h1 id="第五章-循环和关系表达式"><a href="#第五章-循环和关系表达式" class="headerlink" title="第五章 循环和关系表达式"></a>第五章 循环和关系表达式</h1><p>感觉基本都会了，跳过跳过</p>
-<h1 id="第六章-分支语句和逻辑运算符"><a href="#第六章-分支语句和逻辑运算符" class="headerlink" title="第六章 分支语句和逻辑运算符"></a>第六章 分支语句和逻辑运算符</h1><p>好像也都会了，就里面涉及与cin和cout相似的文件操作不怎么熟，也跳过跳过</p>
+<h1 id="第六章-分支语句和逻辑运算符"><a href="#第六章-分支语句和逻辑运算符" class="headerlink" title="第六章 分支语句和逻辑运算符"></a>第六章 分支语句和逻辑运算符</h1><p>好像也都会了，就里面涉及与cin和cout相似的文件操作不怎么熟，后面的章节有对cin和cout的详细描述，那就后面再看吧，也跳过跳过</p>
+<h1 id="第七章-函数"><a href="#第七章-函数" class="headerlink" title="第七章 函数"></a>第七章 函数</h1><ol>
+<li>要分清楚不同的参数传递方法，例如形参，引用参数，指针参数</li>
+<li>在c++中，当且仅当用于函数头或函数原型时，<code>int* x</code>和<code>int x[]</code>的含义是相同的</li>
+<li><code>const</code>与指针的联合使用，看下述代码：<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-type">const</span> <span class="hljs-type">int</span>* x;<br><span class="hljs-type">int</span>* <span class="hljs-type">const</span> y;<br></code></pre></td></tr></table></figure>
+第一个声明中的const用来防止修改x指向的数据，也就是<code>*x</code>的值无法修改，但是可以直接改变x的值，也就是可以<code>x = &amp;z</code>；<br>第二个声明中的const用来防止修改y本身，也就是<code>y = &amp;z</code>不被允许，但是可以进行<code>*y</code>；</li>
+<li>函数的参数是二维数组时，应该如何写函数原型：<ul>
+<li>已知列数、已知行数：void func(int arr[3][4]);</li>
+<li>已知列数、行数不确定：void func(int (*arr)[4]);</li>
+<li>行数和列数都不确定：void func(int** arr, int rows, int cols);</li>
+<li>使用 std::vector（推荐方法）：void func(std::vector&lt;std::vector<int>&gt;&amp; arr);</li>
+</ul>
+</li>
+<li>函数指针的一些声明：<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function"><span class="hljs-type">double</span> <span class="hljs-title">pf</span><span class="hljs-params">(<span class="hljs-type">int</span>)</span></span>;     <span class="hljs-comment">//声明了一个函数pf，接收参数类型为int，返回一个double数据</span><br><span class="hljs-function"><span class="hljs-type">double</span>* <span class="hljs-title">pf</span><span class="hljs-params">(<span class="hljs-type">int</span>)</span></span>;       <span class="hljs-comment">//声明了一个函数pf，接收参数类型为int，返回一个double*数据</span><br><span class="hljs-built_in">double</span> (*pf)(<span class="hljs-type">int</span>);      <span class="hljs-comment">//声明了一个函数指针pf，该函数指针pf指向的函数是一个接收参数类型为int，返回一个double数据的函数</span><br><span class="hljs-type">double</span>* (*pf)(<span class="hljs-type">int</span>);     <span class="hljs-comment">//声明了一个函数指针pf，该函数指针pf指向的函数是一个接收参数类型为int，返回一个double*数据的函数</span><br><br><span class="hljs-comment">//假设有多个函数声明，都是接收参数类型为int，返回一个double数据，一共有f1，f2，f3三个函数声明</span><br><span class="hljs-type">double</span>* *(*pa[<span class="hljs-number">3</span>])(<span class="hljs-type">int</span>) = &#123;f1, f2, f3&#125;;      <span class="hljs-comment">//定义了一个函数指针数组pa，数组有三个元素，分别是三个函数f1f2f3</span><br><span class="hljs-type">double</span>* *(*(*pa)[<span class="hljs-number">3</span>])(<span class="hljs-type">int</span>) = &#123;f1, f2, f3&#125;;   <span class="hljs-comment">//定义了一个函数指针数组指针pa，指针指向的数组有三个元素，分别是三个函数f1f2f3</span><br><br><span class="hljs-comment">//上述定义太麻烦了，利用typedef或者c++11的auto更好</span><br><span class="hljs-keyword">auto</span> pc = &amp;pa;      <span class="hljs-comment">//pc的值设为了pa的地址，也就是pc是个指针，指向pa</span><br><span class="hljs-keyword">typedef</span> <span class="hljs-type">double</span>* (*pf)(<span class="hljs-type">int</span>);<br>pf pa[<span class="hljs-number">3</span>] = &#123;f1, f2, f3&#125;;<br><span class="hljs-built_in">pf</span> (*pd)[<span class="hljs-number">3</span>] = &amp;pa;      <span class="hljs-comment">//和上述是一样的效果，但是代码更简单</span><br></code></pre></td></tr></table></figure></li>
+</ol>
 
                 
               </div>
@@ -389,8 +403,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>“C++ Primer Plus” 笔记记录</div>
-      <div>https://yigefanqie-beiyi.github.io/2025/01/09/“C++ Primer Plus” 笔记记录/</div>
+      <div>“C++ Primer Plus” 第一到七章 笔记总结</div>
+      <div>https://yigefanqie-beiyi.github.io/2025/01/09/“C++ Primer Plus” 第一到七章 笔记总结/</div>
     </div>
     <div class="license-meta">
       
