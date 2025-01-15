@@ -1,0 +1,740 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Bei">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="这章就是最后一章啦！会有很多平常学linux接触到的东西，例如fork，read，putchar，clear，shell之类的，但是大部分人使用这些函数都是进行应用层开发，我们这里会对它进行底层的实现，深层了解这几个常用的系统调用内部的原理 15.1 fork 的原理与实现我们先来看以下经典代码 123456789typedef int pid_t;int main(void)&#123;	pid">
+<meta property="og:type" content="article">
+<meta property="og:title" content="“从零搭建操作系统” 第十五章 系统交互">
+<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2025/01/14/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E5%8D%81%E4%BA%94%E7%AB%A0/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="这章就是最后一章啦！会有很多平常学linux接触到的东西，例如fork，read，putchar，clear，shell之类的，但是大部分人使用这些函数都是进行应用层开发，我们这里会对它进行底层的实现，深层了解这几个常用的系统调用内部的原理 15.1 fork 的原理与实现我们先来看以下经典代码 123456789typedef int pid_t;int main(void)&#123;	pid">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/15.1.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/15.2.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/15.3.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/15.4.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/15.5.png">
+<meta property="article:published_time" content="2025-01-14T09:27:29.000Z">
+<meta property="article:modified_time" content="2025-01-15T11:34:31.858Z">
+<meta property="article:author" content="Bei">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://yigefanqie-beiyi.github.io/img/15.1.png">
+  
+  
+  
+  <title>“从零搭建操作系统” 第十五章 系统交互 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yigefanqie-beiyi.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":50,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Bei</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="“从零搭建操作系统” 第十五章 系统交互"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-01-14 17:27" pubdate>
+          2025年1月14日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          7k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          59 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">“从零搭建操作系统” 第十五章 系统交互</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>这章就是最后一章啦！会有很多平常学linux接触到的东西，例如fork，read，putchar，clear，shell之类的，但是大部分人使用这些函数都是进行应用层开发，我们这里会对它进行底层的实现，深层了解这几个常用的系统调用内部的原理</p>
+<h2 id="15-1-fork-的原理与实现"><a href="#15-1-fork-的原理与实现" class="headerlink" title="15.1 fork 的原理与实现"></a>15.1 fork 的原理与实现</h2><p>我们先来看以下经典代码</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-type">int</span> <span class="hljs-type">pid_t</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>	<span class="hljs-type">pid_t</span> pid = fork();<br>	<span class="hljs-keyword">if</span>(pid != <span class="hljs-number">0</span>)<br>		<span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;im father process pid = %d\n!&quot;</span>,pid);<br>	<span class="hljs-keyword">else</span>	<span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;im child process pid = %d\n!&quot;</span>,pid);<br>	<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>执行完这段代码后，系统打印两个printf的内容，理论上这两个printf在if else语句里，是只能执行其中一个的。这其中就是fork函数在起作用</p>
+<p>fork：当进程A调用了fork函数后，相当于是创建了另一个进程B，并且这个进程B和进程A是“一模一样”的，这里的“一模一样”是指，进程A和B的资源是一样的，但并不是共享资源，因为进程与进程之间是隔离的，只是进程A拷贝了一份资源给进程B，包括代码和数据。因此，上述代码看起来像是一个进程里的代码，但其实在fork之后，会创建一个新的进程B，A作为B的父进程，B作为A的子进程。</p>
+<p>fork的返回值是进程的pid，如果是进程是父进程，则返回父进程的pid，如果进程是子进程，则返回0（不是说子进程没有pid，而是不返回pid只返回0，这样做的目的是能够通过返回值来区分当前进程是子进程和父进程。</p>
+<p>可以这么简单的理解，fork这种返回值的设定是为了便于设计程序。进程A通过返回值pid，在进程A的代码段里就会只执行<code>if(pid != 0)</code>下的语句，进程B通过返回值pid发现是0，在进程B的代码段里就会只执行<code>else</code>下的语句。</p>
+<h3 id="15-1-1-fork实现前的补充工作"><a href="#15-1-1-fork实现前的补充工作" class="headerlink" title="15.1.1 fork实现前的补充工作"></a>15.1.1 fork实现前的补充工作</h3><p>我们需要在thread.c文件中，在PCB结构体里添加父进程的id这一元素，并在初始化中将该值初始化为-1，默认进程没有父进程。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*PCB结构体，存储进程或线程的基本信息*/</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span></span><br><span class="hljs-class">&#123;</span><br>    ...<br>    <span class="hljs-type">uint32_t</span> cwd_inode_nr;			      <span class="hljs-comment">//工作目录inode编号</span><br>    <span class="hljs-type">int16_t</span> parent_pid;                 <span class="hljs-comment">//父进程的pid，如果没有父进程则为-1</span><br>    <span class="hljs-type">uint32_t</span> stack_magic;			      <span class="hljs-comment">//越界检查  因为我们pcb上面的就是我们要用的栈了 到时候还要越界检查</span><br>&#125;;<br><br><span class="hljs-comment">/*初始化线程的基本信息*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">init_thread</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> task_struct* pthread, <span class="hljs-type">char</span>* name, <span class="hljs-type">int</span> prio)</span>&#123;<br>    ...<br>    pthread-&gt;cwd_inode_nr = <span class="hljs-number">0</span>;					<span class="hljs-comment">//默认工作路径在根目录</span><br>    pthread -&gt; parent_pid = <span class="hljs-number">-1</span>;             <span class="hljs-comment">//默认没有父进程</span><br>    pthread -&gt; stack_magic = <span class="hljs-number">0x19870916</span>;    <span class="hljs-comment">//魔数，可以随意设置</span><br>    pthread -&gt; self_kstack = (<span class="hljs-type">uint32_t</span>*)((<span class="hljs-type">uint32_t</span>)pthread + PG_SIZE);  <span class="hljs-comment">//设置线程在内核态下栈顶的位置</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在memory.c中增加函数用以在内存池中分配一页内存并完成虚拟地址的映射，该函数不同的地方在于：函数中不需要从虚拟地址内存池中设置位图。<br>注意：这个函数是专门用来fork时复制进程A用户空间的资源给进程B的时候的，对于进程B而言，需要分配新的空间存储进程A的资源，但对于进程A而言，分配的空间已经是在进程A的虚拟地址位图里做好了映射了，因此进程B只需要将虚拟地址位图最后也复制过去就好。因此这个函数相当于是进程B专门用来做按照进程A的资源进行内存映射的函数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">//得到1页大小内存并复制到页表中 专门针对fork时虚拟地址位图无需操作</span><br><span class="hljs-comment">//因为位图我们后面会复制父进程的 所以当然不用继续对虚拟位图操作了</span><br><span class="hljs-type">void</span>* <span class="hljs-title function_">get_a_page_without_opvaddrbitmap</span><span class="hljs-params">(<span class="hljs-keyword">enum</span> pool_flags pf,<span class="hljs-type">uint32_t</span> vaddr)</span><br>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">pool</span>* <span class="hljs-title">mem_pool</span> =</span> (pf == PF_KERNEL) ? &amp;kernel_pool : &amp;user_pool;<br>    lock_acquire(&amp;mem_pool-&gt;lock);<br>    <span class="hljs-type">void</span>* page_phyaddr = palloc(mem_pool);<br>    <span class="hljs-comment">//分配失败</span><br>    <span class="hljs-keyword">if</span>(page_phyaddr == <span class="hljs-literal">NULL</span>)<br>    &#123;<br>        lock_release(&amp;mem_pool-&gt;lock);<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br>    &#125;<br>    page_table_add((<span class="hljs-type">void</span>*)vaddr,page_phyaddr);<br>    lock_release(&amp;mem_pool-&gt;lock);<br>    <span class="hljs-keyword">return</span> (<span class="hljs-type">void</span>*)vaddr;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="15-1-2-fork的实现"><a href="#15-1-2-fork的实现" class="headerlink" title="15.1.2 fork的实现"></a>15.1.2 fork的实现</h3><p>fork.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">extern</span> <span class="hljs-type">void</span> <span class="hljs-title function_">intr_exit</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;<br><span class="hljs-keyword">extern</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list</span> <span class="hljs-title">thread_ready_list</span>;</span>      <span class="hljs-comment">//就绪队列</span><br><span class="hljs-keyword">extern</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">list</span> <span class="hljs-title">thread_all_list</span>;</span>        <span class="hljs-comment">//所有任务队列</span><br><br><span class="hljs-comment">//复制父进程的pcb给子进程，直接先把pcb所在页 包括内核栈 中断栈全部一起复制过来 其他的需要修改的再一项项改</span><br><span class="hljs-type">int32_t</span> <span class="hljs-title function_">copy_pcb_vaddrbitmap_stack0</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> task_struct* child_thread,<span class="hljs-keyword">struct</span> task_struct* parent_thread)</span><br>&#123;<br>    <span class="hljs-comment">//直接先把pcb所在页 包括内核栈 中断栈全部一起复制过来 其他的需要修改的再一项项改</span><br>    <span class="hljs-built_in">memcpy</span>(child_thread,parent_thread,PG_SIZE);<br>    child_thread-&gt;pid = fork_pid();<br>    child_thread-&gt;elapsed_ticks = <span class="hljs-number">0</span>;<br>    child_thread-&gt;status = TASK_READY; <span class="hljs-comment">//之后要放到就绪队列 被调度的</span><br>    child_thread-&gt;ticks = child_thread-&gt;priority; <span class="hljs-comment">//时间片填满</span><br>    child_thread-&gt;parent_pid = parent_thread-&gt;pid; <span class="hljs-comment">//默认是-1 对于子进程的parent_pid 父进程的pid</span><br>    child_thread-&gt;general_tag.prev = child_thread-&gt;general_tag.next = <span class="hljs-literal">NULL</span>; <br>    child_thread-&gt;all_list_tag.prev = child_thread-&gt;all_list_tag.next = <span class="hljs-literal">NULL</span>;<br>    block_desc_init(child_thread-&gt;u_block_desc);	<span class="hljs-comment">//malloc 内存块分配符初始化</span><br>    <span class="hljs-comment">//虚拟位图需要分配页 的页数 毕竟两个进程不能共享虚拟内存位图嘛 但是我们是需要把父进程的给复制了 </span><br>    <span class="hljs-type">uint32_t</span> bitmap_pg_cnt = DIV_ROUND_UP((<span class="hljs-number">0xc0000000</span> - USER_VADDR_START) / PG_SIZE / <span class="hljs-number">8</span> , PG_SIZE);  <br>    <span class="hljs-type">void</span>* vaddr_btmp = get_kernel_pages(bitmap_pg_cnt);<br>    <span class="hljs-comment">//复制父进程的虚拟内存位图 并把自己刚分配好的独立位图给我们的子进程赋值</span><br>    <span class="hljs-built_in">memcpy</span>(vaddr_btmp,child_thread-&gt;userprog_vaddr.vaddr_bitmap.bits,bitmap_pg_cnt * PG_SIZE);<br>    child_thread-&gt;userprog_vaddr.vaddr_bitmap.bits = vaddr_btmp;<br>    ASSERT(<span class="hljs-built_in">strlen</span>(child_thread-&gt;name) &lt; <span class="hljs-number">11</span>); <span class="hljs-comment">//进程后面加个名字</span><br>    <span class="hljs-built_in">strcat</span>(child_thread-&gt;name,<span class="hljs-string">&quot;_fork&quot;</span>);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-comment">//将父进程在内存区的数据全部复制给子进程</span><br><span class="hljs-comment">//buf_page是因为用户进程间无法共享内存 看不见彼此 只能通过buf_page来作为过渡</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">copy_body_stack3</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> task_struct* parent_thread,<span class="hljs-keyword">struct</span> task_struct* child_thread,<span class="hljs-type">void</span>* buf_page)</span><br>&#123;<br>    <span class="hljs-type">uint8_t</span>* vaddr_btmp = parent_thread-&gt;userprog_vaddr.vaddr_bitmap.bits;<br>    <span class="hljs-type">uint32_t</span> btmp_bytes_len = parent_thread-&gt;userprog_vaddr.vaddr_bitmap.btmp_bytes_len;<br>    <span class="hljs-type">uint32_t</span> vaddr_start = parent_thread-&gt;userprog_vaddr.vaddr_start;<br>    <span class="hljs-type">uint32_t</span> idx_byte = <span class="hljs-number">0</span>;<br>    <span class="hljs-type">uint32_t</span> idx_bit = <span class="hljs-number">0</span>;<br>    <span class="hljs-type">uint32_t</span> prog_vaddr = <span class="hljs-number">0</span>;<br>    <br>    <span class="hljs-comment">//根据虚拟内存位图来看 我们只需要把位图中看看哪些页被用了</span><br>    <span class="hljs-comment">//我们把那些页给复制过去即可 同时也需要把页表在新进程中安装一下</span><br>    <span class="hljs-keyword">while</span>(idx_byte &lt; btmp_bytes_len)<br>    &#123;<br>        <span class="hljs-keyword">if</span>(vaddr_btmp[idx_byte])<br>        &#123;<br>            idx_bit = <span class="hljs-number">0</span>;<br>            <span class="hljs-keyword">while</span>(idx_bit &lt; <span class="hljs-number">8</span>) <span class="hljs-comment">//一字节8位</span><br>            &#123;<br>                <span class="hljs-keyword">if</span>((BITMAP_MASK &lt;&lt; idx_bit) &amp; vaddr_btmp[idx_byte])<br>                &#123;<br>                    prog_vaddr = (idx_byte * <span class="hljs-number">8</span> + idx_bit) * PG_SIZE + vaddr_start;<br>                    <span class="hljs-built_in">memcpy</span>(buf_page,(<span class="hljs-type">void</span>*)prog_vaddr,PG_SIZE);<br>                    page_dir_activate(child_thread); <span class="hljs-comment">//切换到用户页表 防止安装到父进程里面去了</span><br>                    get_a_page_without_opvaddrbitmap(PF_USER,prog_vaddr);<br>                    <span class="hljs-built_in">memcpy</span>((<span class="hljs-type">void</span>*)prog_vaddr,buf_page,PG_SIZE);<br>                    page_dir_activate(parent_thread); <span class="hljs-comment">//切换回父进程</span><br>                &#125;<br>                ++idx_bit;<br>            &#125;<br>        &#125;<br>        ++idx_byte;<br>    &#125;    <br>&#125;<br><br><span class="hljs-comment">//给子进程构建内核栈和修改返回值</span><br><span class="hljs-type">int32_t</span> <span class="hljs-title function_">build_child_stack</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> task_struct* child_thread)</span><br>&#123;<br>    <span class="hljs-comment">//内核栈的最高地址处 intr中断栈最低地址处</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">intr_stack</span>* <span class="hljs-title">intr_0_stack</span> =</span> \<br>      (<span class="hljs-keyword">struct</span> intr_stack*)((<span class="hljs-type">uint32_t</span>)child_thread + PG_SIZE - <span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> intr_stack));<br>    <span class="hljs-comment">//返回值 0</span><br>    intr_0_stack-&gt;eax = <span class="hljs-number">0</span>;<br>    <span class="hljs-comment">//这里我把其结构体搬过来了</span><br>    <span class="hljs-comment">/*struct thread_stack</span><br><span class="hljs-comment">    &#123;</span><br><span class="hljs-comment">        uint32_t ebp;</span><br><span class="hljs-comment">        uint32_t ebx;</span><br><span class="hljs-comment">        uint32_t edi;</span><br><span class="hljs-comment">        uint32_t esi;</span><br><span class="hljs-comment"></span><br><span class="hljs-comment">        void (*eip) (thread_func* func,void* func_arg); //和下面的相互照应 以ret 汇编代码进入kernel_thread函数调用</span><br><span class="hljs-comment">    </span><br><span class="hljs-comment">        void (*unused_retaddr);                         //占位数 在栈顶站住了返回地址的位置 因为是汇编ret </span><br><span class="hljs-comment">        thread_func* function;                          //进入kernel_thread要调用的函数地址</span><br><span class="hljs-comment">        void* func_arg;				      //参数指针</span><br><span class="hljs-comment">    &#125;;*/</span><br>    <span class="hljs-comment">//返回地址毕竟是高地址</span><br>    <span class="hljs-type">uint32_t</span>* ret_addr_in_thread_stack = (<span class="hljs-type">uint32_t</span>*)intr_0_stack - <span class="hljs-number">1</span>;<br>    <span class="hljs-type">uint32_t</span>* esi_ptr_in_thread_stack =  (<span class="hljs-type">uint32_t</span>*)intr_0_stack - <span class="hljs-number">2</span>;<br>    <span class="hljs-type">uint32_t</span>* edi_ptr_in_thread_stack =  (<span class="hljs-type">uint32_t</span>*)intr_0_stack - <span class="hljs-number">3</span>;<br>    <span class="hljs-type">uint32_t</span>* ebx_ptr_in_thread_stack =  (<span class="hljs-type">uint32_t</span>*)intr_0_stack - <span class="hljs-number">4</span>;<br>    <span class="hljs-type">uint32_t</span>* ebp_ptr_in_thread_stack =  (<span class="hljs-type">uint32_t</span>*)intr_0_stack - <span class="hljs-number">5</span>;<br>    <br>    *ret_addr_in_thread_stack = (<span class="hljs-type">uint32_t</span>)intr_exit;<br>    <span class="hljs-comment">//反正之后的pop都会覆盖</span><br>    *esi_ptr_in_thread_stack = *edi_ptr_in_thread_stack = *ebx_ptr_in_thread_stack = \<br>    *ebp_ptr_in_thread_stack = <span class="hljs-number">0</span>;<br>    <span class="hljs-comment">//内核栈栈顶</span><br>    child_thread-&gt;self_kstack = ebp_ptr_in_thread_stack;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-comment">//更新inode打开数</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">updata_inode_open_cnts</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> task_struct* thread)</span><br>&#123;<br>    <span class="hljs-type">int32_t</span> local_fd = <span class="hljs-number">3</span>,global_fd = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">while</span>(local_fd &lt; MAX_FILES_OPEN_PER_PROC)<br>    &#123;<br>        global_fd = thread-&gt;fd_table[local_fd];<br>        ASSERT(global_fd &lt; MAX_FILE_OPEN);<br>        <span class="hljs-keyword">if</span>(global_fd != <span class="hljs-number">-1</span>)<br>            ++file_table[global_fd].fd_inode-&gt;i_open_cnts;<br>        ++local_fd;<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">//汇总函数 包装 把父进程资源给子进程</span><br><span class="hljs-type">int32_t</span> <span class="hljs-title function_">copy_process</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> task_struct* child_thread,<span class="hljs-keyword">struct</span> task_struct* parent_thread)</span><br>&#123;<br>    <span class="hljs-comment">//用于给memcpy 过渡的页面</span><br>    <span class="hljs-type">void</span>* buf_page = get_kernel_pages(<span class="hljs-number">1</span>);<br>    <span class="hljs-keyword">if</span>(buf_page == <span class="hljs-literal">NULL</span>)<br>    &#123;<br>        printk(<span class="hljs-string">&quot;copy_process: buf_page alloc fail\n&quot;</span>);<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>    &#125;<br>    <span class="hljs-keyword">if</span>(copy_pcb_vaddrbitmap_stack0(child_thread,parent_thread) == <span class="hljs-number">-1</span>)<br>    &#123;<br>        printk(<span class="hljs-string">&quot;copy_process: copy_pcb_vaddrbitmap_stack0 fail\n&quot;</span>);<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>    &#125;<br>    <br>    child_thread-&gt;pgdir = create_page_dir();<br>    printk(<span class="hljs-string">&quot;child_thread-&gt;pgdir %x\nparent_thread-&gt;pgdir %x\n&quot;</span>,child_thread-&gt;pgdir,parent_thread-&gt;pgdir);<br>    <span class="hljs-keyword">if</span>(child_thread-&gt;pgdir == <span class="hljs-literal">NULL</span>)<br>    &#123;<br>        printk(<span class="hljs-string">&quot;copy_process: child_thread-&gt;pgdir create fail\n&quot;</span>);<br>    	<span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>    &#125;<br>    <br>    copy_body_stack3(parent_thread,child_thread,buf_page);<br>    build_child_stack(child_thread);<br>    updata_inode_open_cnts(child_thread);<br>    mfree_page(PF_KERNEL,buf_page,<span class="hljs-number">1</span>);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-comment">//禁止从内核调用 只能从用户进程调用</span><br><span class="hljs-type">pid_t</span> <span class="hljs-title function_">sys_fork</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span>* <span class="hljs-title">parent_thread</span> =</span> running_thread();<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span>* <span class="hljs-title">child_thread</span>  =</span> get_kernel_pages(<span class="hljs-number">1</span>);<br>    <span class="hljs-keyword">if</span>(child_thread == <span class="hljs-literal">NULL</span>)<br>    	<span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>    <br>    ASSERT(INTR_OFF == intr_get_status() &amp;&amp; parent_thread-&gt;pgdir != <span class="hljs-literal">NULL</span>);<br>    <br>    <span class="hljs-keyword">if</span>(copy_process(child_thread,parent_thread) == <span class="hljs-number">-1</span>)<br>    	<span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>    	<br>    ASSERT(!elem_find(&amp;thread_ready_list,&amp;child_thread-&gt;general_tag));<br>    list_append(&amp;thread_ready_list,&amp;child_thread-&gt;general_tag);<br>    ASSERT(!elem_find(&amp;thread_all_list,&amp;child_thread-&gt;all_list_tag));<br>    list_append(&amp;thread_all_list,&amp;child_thread-&gt;all_list_tag);<br>    <br>    <span class="hljs-keyword">return</span> child_thread-&gt;pid;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<p>fork其实主要完成两个工作：</p>
+<ol>
+<li>完成资源的复制</li>
+<li>在处理器执行子进程的时候，让处理器指向子进程中fork的下一步代码位置</li>
+</ol>
+<p>用户进程一般是通过系统调用从而执行fork的，系统调用本身属于中断，通过中断的上下文保护，让用户进入内核态实现系统调用并返回。</p>
+<p>对于父进程，执行完系统调用fork后就会继续执行之后的代码，是因为中断退出函数<code>intr_exit</code>在起作用恢复上下文。对于子进程，本身是被fork创建出来的，因此不存在父进程那般进入中断的状态，也就无法通过中断退出函数<code>intr_exit</code>恢复上下文。</p>
+<p>子进程被创建后，进程的状态会被设置成READY态，并将进程加入到进程准备队列中，等待调度器调度，当调度器调度到子进程时，是通过schedule中的switch_to恢复子进程的上下文的，因此我们要在子进程的内核栈里，将内核栈中eip指针指向中断退出函数<code>intr_exit</code>，这样switch_to通过<code>ret</code>将处理器的eip指针指向指向中断退出函数<code>intr_exit</code>，并进而通过中断退出函数恢复上下文。</p>
+<p>有的人可能好奇，为什么子进程可以直接通过中断退出函数恢复上下文，没进行过保存上下文又如何有恢复一说呢？其实保存已经进行过了，但是是父进程进行的，父进程先通过进入中断保存了上下文在用户进程栈里，在中断处理函数例程中才完成了对子进程的复制，子进程拥有父进程的所有资源，因此子进程的进程栈里其实也有一份父进程保存上下文时的拷贝，因此可以通过<code>intr_exit</code>恢复上下文。</p>
+<h3 id="15-1-3-添加fork系统调用与直线init进程"><a href="#15-1-3-添加fork系统调用与直线init进程" class="headerlink" title="15.1.3 添加fork系统调用与直线init进程"></a>15.1.3 添加fork系统调用与直线init进程</h3><p>在Linux中，init是用户级进程，是第一个启动的程序，因此它的pid是1，Linux利用这个进程完成很多初始化的工作<br>在main.c中</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>   put_str(<span class="hljs-string">&quot;I am kernel\n&quot;</span>);<br>   init_all();<br>   intr_enable();<br>   <span class="hljs-keyword">while</span>(<span class="hljs-number">1</span>);<br>   <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">uint32_t</span> ret_pid = fork();<br>    <span class="hljs-keyword">if</span>(ret_pid)<br>    	<span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;i am father,my pid is %d, ret pid is %d\n&quot;</span>,getpid(),ret_pid);<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;i am child, my pid is %d, ret pid is %d\n&quot;</span>,getpid(),ret_pid);   <br>    &#125;<br>    <span class="hljs-keyword">while</span>(<span class="hljs-number">1</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在thread.c中</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/*初始化线程环境*/</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">thread_init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>&#123;<br>    ...<br>    process_execute(init,<span class="hljs-string">&quot;init&quot;</span>);<br>    make_main_thread();<br>    idle_thread = thread_start(<span class="hljs-string">&quot;idle&quot;</span>,<span class="hljs-number">10</span>,idle,<span class="hljs-literal">NULL</span>);	<span class="hljs-comment">//创建休眠进程</span><br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><img src="/../img/15.1.png" srcset="/img/loading.gif" lazyload title="fork运行过程"></p>
+<h2 id="15-2-实现一个简单的shell"><a href="#15-2-实现一个简单的shell" class="headerlink" title="15.2 实现一个简单的shell"></a>15.2 实现一个简单的shell</h2><p>我们实现一个简单的shell，能处理键入的命令</p>
+<h3 id="15-2-1-shell雏形"><a href="#15-2-1-shell雏形" class="headerlink" title="15.2.1 shell雏形"></a>15.2.1 shell雏形</h3><p>shell.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;shell.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;global.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;stdint.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;string.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;syscall.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;stdio.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;file.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;debug.h&quot;</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> cmd_len    128 <span class="hljs-comment">//最大支持128个字符</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> MAX_ARG_NR 16  <span class="hljs-comment">//命令名外支持15个参数</span></span><br><br><span class="hljs-type">char</span> cmd_line[cmd_len] = &#123;<span class="hljs-number">0</span>&#125;;<br><span class="hljs-type">char</span> cwd_cache[<span class="hljs-number">64</span>] = &#123;<span class="hljs-number">0</span>&#125;; <span class="hljs-comment">//目录的缓存 执行cd则移动到其他目录去</span><br><span class="hljs-type">char</span>* argv[MAX_ARG_NR];   <span class="hljs-comment">//参数</span><br><br><span class="hljs-comment">//固定输出提示</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">print_prompt</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;[tomato@localhost %s]$ &quot;</span>,cwd_cache);<br>&#125;<br><br><span class="hljs-comment">//从键盘缓冲区中最多读入count字节到buf</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">readline</span><span class="hljs-params">(<span class="hljs-type">char</span>* buf,<span class="hljs-type">int32_t</span> count)</span><br>&#123;<br>    ASSERT(buf != <span class="hljs-literal">NULL</span> &amp;&amp; count &gt; <span class="hljs-number">0</span>);<br>    <span class="hljs-type">char</span>* pos = buf;<br>    <span class="hljs-comment">//默认没有到回车就不停止 、一个一个字节读</span><br>    <span class="hljs-keyword">while</span>(read(stdin_no,pos,<span class="hljs-number">1</span>) != <span class="hljs-number">-1</span> &amp;&amp; (pos - buf) &lt; count)<br>    &#123;<br>        <span class="hljs-keyword">switch</span>(*pos)<br>        &#123;<br>            <span class="hljs-comment">//清屏</span><br>            <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;l&#x27;</span>-<span class="hljs-string">&#x27;a&#x27;</span>:<br>                *pos = <span class="hljs-number">0</span>;<br>                clear();<br>                print_prompt();<br>                <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%s&quot;</span>,buf);  <span class="hljs-comment">//把刚刚键入的字符打印出来</span><br>                <span class="hljs-keyword">break</span>;<br>            <br>            <span class="hljs-comment">//清除输入</span><br>            <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;u&#x27;</span>-<span class="hljs-string">&#x27;a&#x27;</span>:<br>                <span class="hljs-keyword">while</span>(buf != pos)<br>                &#123;<br>                    <span class="hljs-built_in">putchar</span>(<span class="hljs-string">&#x27;\b&#x27;</span>);<br>                    *(pos--) = <span class="hljs-number">0</span>;<br>                &#125;<br>                <span class="hljs-keyword">break</span>;<br>                <br>            <span class="hljs-comment">//和下面的回车一起</span><br>            <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;\n&#x27;</span>:<br>            <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;\r&#x27;</span>:<br>                *pos = <span class="hljs-number">0</span>;<br>                <span class="hljs-built_in">putchar</span>(<span class="hljs-string">&#x27;\n&#x27;</span>);<br>                <span class="hljs-keyword">return</span>;<br>            <br>            <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;\b&#x27;</span>:<br>                <span class="hljs-keyword">if</span>(buf[<span class="hljs-number">0</span>] != <span class="hljs-string">&#x27;\b&#x27;</span>) <span class="hljs-comment">//阻止删除不是本次输出的信息</span><br>                &#123;<br>                    --pos;<br>                    <span class="hljs-built_in">putchar</span>(<span class="hljs-string">&#x27;\b&#x27;</span>);<br>                &#125;<br>                <span class="hljs-keyword">break</span>;<br>            <br>            <span class="hljs-keyword">default</span>:<br>                <span class="hljs-built_in">putchar</span>(*pos);<br>                ++pos;<br>        &#125;<br>    &#125;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;readline: cant fine entry_key in the cmd_line,max num of char is 128\n&quot;</span>);<br>&#125;<br><br><span class="hljs-comment">//解析键入的字符 token为分割符号</span><br><span class="hljs-type">int32_t</span> <span class="hljs-title function_">cmd_parse</span><span class="hljs-params">(<span class="hljs-type">char</span>* cmd_str,<span class="hljs-type">char</span>** argv,<span class="hljs-type">char</span> token)</span><br>&#123;<br>    ASSERT(cmd_str != <span class="hljs-literal">NULL</span>);<br>    <span class="hljs-type">int32_t</span> arg_idx = <span class="hljs-number">0</span>;<br>    <br>    <span class="hljs-comment">//初始化指针数组</span><br>    <span class="hljs-keyword">while</span>(arg_idx &lt; MAX_ARG_NR)<br>    &#123;<br>        argv[arg_idx] = <span class="hljs-literal">NULL</span>;<br>        arg_idx++;<br>    &#125;<br>    <span class="hljs-type">char</span>* next = cmd_str;<br>    <span class="hljs-type">int32_t</span> argc = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">while</span>(*next)<br>    &#123;<br>        <span class="hljs-comment">//跳过分隔符</span><br>        <span class="hljs-keyword">while</span>(*next == token)	++next;<br>        <span class="hljs-keyword">if</span>(*next == <span class="hljs-number">0</span>)	<span class="hljs-keyword">break</span>;	<span class="hljs-comment">//如果到达字符串末尾，则退出循环</span><br><br>        <span class="hljs-comment">//保存当前参数的起始位置</span><br>        argv[argc] = next;     <span class="hljs-comment">//无论怎么样 到这里都是有字符的地方 且argc表示目前存在第几个参数字符串</span><br>        <br>        <span class="hljs-comment">//跳过当前参数</span><br>        <span class="hljs-keyword">while</span>(*next &amp;&amp; *next != token)  <span class="hljs-comment">//要不结束了为0 或者到了分割符号</span><br>            ++next;<br>        <br>        <span class="hljs-comment">// 相当于是，将输入的字符串里的空格全部替换成了结束符</span><br>        <span class="hljs-keyword">if</span>(*next)<br>            *(next++) = <span class="hljs-number">0</span>; <span class="hljs-comment">//到最后就是设置字符串的末尾0 分割符号位置刚好处理为0 这样字符串有结束末尾了</span><br>                        <span class="hljs-comment">//最后一个参数后面自然有&#x27;\0&#x27;</span><br>        <span class="hljs-keyword">if</span>(argc &gt; MAX_ARG_NR)<br>            <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>        <br>        ++argc;        <br>    &#125;<br>    <span class="hljs-keyword">return</span> argc;        <span class="hljs-comment">//多少个参数</span><br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">my_shell</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    cwd_cache[<span class="hljs-number">0</span>] = <span class="hljs-string">&#x27;/&#x27;</span>;<br>    <span class="hljs-type">int</span> argc = <span class="hljs-number">-1</span>;<br>    <span class="hljs-keyword">while</span>(<span class="hljs-number">1</span>)<br>    &#123;<br>        print_prompt();<br>        <span class="hljs-built_in">memset</span>(cmd_line,<span class="hljs-number">0</span>,cmd_len);<br>        readline(cmd_line,cmd_len);<br>        <span class="hljs-keyword">if</span>(cmd_line[<span class="hljs-number">0</span>] == <span class="hljs-number">0</span>)<br>            <span class="hljs-keyword">continue</span>;<br>            <br>        argc = <span class="hljs-number">-1</span>;  <br>        argc = cmd_parse(cmd_line,argv,<span class="hljs-string">&#x27; &#x27;</span>);<br>        <span class="hljs-keyword">if</span>(argc == <span class="hljs-number">-1</span>)<br>        &#123;<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;num of arguments exceed %d\n&quot;</span>,MAX_ARG_NR);<br>            <span class="hljs-keyword">continue</span>;<br>        &#125;<br>        <br>        <span class="hljs-type">int32_t</span> arg_idx = <span class="hljs-number">0</span>;<br>        <span class="hljs-keyword">while</span>(arg_idx &lt; argc)<br>        &#123;<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%s &quot;</span>,argv[arg_idx]);<br>            arg_idx++;<br>        &#125;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;\n&quot;</span>);<br>    &#125;<br>    PANIC(<span class="hljs-string">&quot;my_shell: should not be here&quot;</span>);<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<p>main.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>   put_str(<span class="hljs-string">&quot;I am kernel\n&quot;</span>);<br>   init_all();<br><br>   intr_enable();<br>   cls_screen();<br>   console_put_str(<span class="hljs-string">&quot;[tomato@localhost /]$ &quot;</span>);<br>   <span class="hljs-keyword">while</span>(<span class="hljs-number">1</span>);<br>   <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">uint32_t</span> ret_pid = fork();<br>    <span class="hljs-keyword">if</span>(ret_pid)<br>        <span class="hljs-keyword">while</span>(<span class="hljs-number">1</span>);<br>    <span class="hljs-keyword">else</span><br>        my_shell();<br>    PANIC(<span class="hljs-string">&quot;init: should not be here&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>init进程是系统创建的第一个程序，是所有进程的父进程，因此在init进程中利用fork创建一个子进程，子进程执行<code>my_shell()</code>函数</p>
+<p><code>my_shell()</code>函数的主要作用是：将用户键入的命令按照空格作为分隔符，写入数组<code>argv[arg_idx]</code>作为参数；具体实现算法实际上就是将用户输入的命令作为一整个字符串处理，将命令中的空格换成字符串结束符<code>\0</code>，并把每个参数的起始地址存放至数组<code>argv[arg_idx]</code>。</p>
+<p><img src="/../img/15.2.png" srcset="/img/loading.gif" lazyload title="shell雏形"></p>
+<h3 id="15-2-2-实现shell的一些功能"><a href="#15-2-2-实现shell的一些功能" class="headerlink" title="15.2.2 实现shell的一些功能"></a>15.2.2 实现shell的一些功能</h3><p>命令分为两大类：外部命令 和 内部命令</p>
+<p>外部命令是指该命令存储在文件系统上的外部程序，执行该命令时，实际是从文件系统上加载该程序到内存后运行的，也就是说外部命令会以进程的方式执行，Linux常用的ls，mkdir，clear等都是外部命令</p>
+<p>内部命令也称为内建命令，是系统本身提供的功能，只是一些单独的功能函数，比如cd命令</p>
+<p>为了方便，我们就将ls等命令直接写成内部命令了，内部命令放入新的文件buildin_cmd.c中</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;buildin_cmd.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;file.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;fs.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;debug.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;string.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;syscall.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;stdio-kernel.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;dir.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;fs.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;stdio.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;shell.h&quot;</span></span><br><br><span class="hljs-keyword">extern</span> <span class="hljs-type">char</span> final_path[<span class="hljs-number">160</span>];<br><br><span class="hljs-comment">//在用户态就把路径给解析出来</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">wash_path</span><span class="hljs-params">(<span class="hljs-type">char</span>* old_abs_path,<span class="hljs-type">char</span>* new_abs_path)</span><br>&#123;<br>    ASSERT(old_abs_path[<span class="hljs-number">0</span>] == <span class="hljs-string">&#x27;/&#x27;</span>);<br>    <span class="hljs-type">char</span> name[MAX_FILE_NAME_LEN] = &#123;<span class="hljs-number">0</span>&#125;;<br>    <span class="hljs-type">char</span>* sub_path = old_abs_path;<br>    sub_path = path_parse(sub_path,name);<br>    <br>    <span class="hljs-comment">//如果直接就是根目录 直接返回即可</span><br>    <span class="hljs-keyword">if</span>(name[<span class="hljs-number">0</span>] == <span class="hljs-number">0</span>)<br>    &#123;<br>        new_abs_path[<span class="hljs-number">0</span>] = <span class="hljs-string">&#x27;/&#x27;</span>;<br>        new_abs_path[<span class="hljs-number">1</span>] = <span class="hljs-number">0</span>;<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br>    new_abs_path[<span class="hljs-number">0</span>] = <span class="hljs-number">0</span>; <br>    <span class="hljs-built_in">strcat</span>(new_abs_path,<span class="hljs-string">&quot;/&quot;</span>);<br>    <span class="hljs-keyword">while</span>(name[<span class="hljs-number">0</span>])<br>    &#123;<br>        <span class="hljs-keyword">if</span>(!<span class="hljs-built_in">strcmp</span>(<span class="hljs-string">&quot;..&quot;</span>,name))   <span class="hljs-comment">//返回上级</span><br>        &#123;<br>            <span class="hljs-type">char</span>* slash_ptr = <span class="hljs-built_in">strrchr</span>(new_abs_path,<span class="hljs-string">&#x27;/&#x27;</span>); <span class="hljs-comment">//等于移动到最偏右的/位置去</span><br>            <span class="hljs-keyword">if</span>(slash_ptr != new_abs_path)   <span class="hljs-comment">//如果为 /aaa 那么移动之后就到/的位置了 如果是/aaa/bbb 那么就会回到/aaa/</span><br>                *slash_ptr = <span class="hljs-number">0</span>; <span class="hljs-comment">// 把/变成0</span><br>            <span class="hljs-keyword">else</span><br>	        *(slash_ptr+<span class="hljs-number">1</span>) = <span class="hljs-number">0</span>; <span class="hljs-comment">// 如果是 / 或者 /aaa 那么都回到/ 则把最右边+1置零位即可</span><br>        &#125;<br>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(<span class="hljs-built_in">strcmp</span>(<span class="hljs-string">&quot;.&quot;</span>,name))  <span class="hljs-comment">//如果不是到. 增加到后米纳即可 .等于没有作用 继续遍历即可</span><br>        &#123;<br>            <span class="hljs-keyword">if</span>(<span class="hljs-built_in">strcmp</span>(new_abs_path,<span class="hljs-string">&quot;/&quot;</span>))  <span class="hljs-comment">//不是 / 防止出现// 的情况</span><br>                <span class="hljs-built_in">strcat</span>(new_abs_path,<span class="hljs-string">&quot;/&quot;</span>);<br>            <span class="hljs-built_in">strcat</span>(new_abs_path,name);<br>        &#125;<br>        <br>        <span class="hljs-built_in">memset</span>(name,<span class="hljs-number">0</span>,MAX_FILE_NAME_LEN);<br>        <span class="hljs-keyword">if</span>(sub_path)<br>            sub_path = path_parse(sub_path,name);<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">//把path处理 . ..去掉 储存在final_path getcwd得到当前工作目录 + 相对路径 即绝对路径</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">make_clear_abs_path</span><span class="hljs-params">(<span class="hljs-type">char</span>* path,<span class="hljs-type">char</span>* final_path)</span><br>&#123;<br>    <span class="hljs-type">char</span> abs_path[MAX_PATH_LEN] = &#123;<span class="hljs-number">0</span>&#125;;<br>    <span class="hljs-keyword">if</span>(path[<span class="hljs-number">0</span>] != <span class="hljs-string">&#x27;/&#x27;</span>)  <span class="hljs-comment">//如果不是绝对路径就弄成绝对路径</span><br>    &#123;<br>        <span class="hljs-built_in">memset</span>(abs_path,<span class="hljs-number">0</span>,MAX_PATH_LEN);<br>        <span class="hljs-keyword">if</span>(getcwd(abs_path,MAX_PATH_LEN) != <span class="hljs-literal">NULL</span>)<br>        &#123;<br>            <span class="hljs-keyword">if</span>(!((abs_path[<span class="hljs-number">0</span>] == <span class="hljs-string">&#x27;/&#x27;</span>) &amp;&amp; abs_path[<span class="hljs-number">1</span>] == <span class="hljs-number">0</span>))<br>                <span class="hljs-built_in">strcat</span>(abs_path,<span class="hljs-string">&quot;/&quot;</span>);<br>        &#125;<br>    &#125;<br>    <span class="hljs-comment">//把path 加到工作目录的头上</span><br>    <span class="hljs-built_in">strcat</span>(abs_path,path);<br>    wash_path(abs_path,final_path);<br>&#125;<br><br><span class="hljs-comment">// pwd命令中的内建函数 得到当前工作目录</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">buildin_pwd</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> argc,<span class="hljs-type">char</span>** argv)</span><br>&#123;<br>    <span class="hljs-comment">//没有参数才可以</span><br>    <span class="hljs-keyword">if</span>(argc != <span class="hljs-number">1</span>)<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;pwd: no argument support!\n&quot;</span>);<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>        <span class="hljs-keyword">if</span>(getcwd(final_path,MAX_PATH_LEN) != <span class="hljs-literal">NULL</span>)<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%s\n&quot;</span>,final_path);<br>        <span class="hljs-keyword">else</span><br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;pwd: get current work directory failed\n&quot;</span>);<br>    &#125;   <br>&#125;<br><br><span class="hljs-comment">// 支持一个参数 改变当前工作目录</span><br><span class="hljs-type">char</span>* <span class="hljs-title function_">buildin_cd</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> argc,<span class="hljs-type">char</span>** argv)</span><br>&#123;<br>    <span class="hljs-keyword">if</span>(argc &gt; <span class="hljs-number">2</span>)<br>    &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;cd: only support 1 argument!\n&quot;</span>);<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br>    &#125;<br>    <span class="hljs-keyword">if</span>(argc == <span class="hljs-number">1</span>)<br>    &#123;<br>        final_path[<span class="hljs-number">0</span>] = <span class="hljs-string">&#x27;/&#x27;</span>;<br>        final_path[<span class="hljs-number">1</span>] = <span class="hljs-number">0</span>;<br>    &#125;<br>    <span class="hljs-keyword">else</span>    make_clear_abs_path(argv[<span class="hljs-number">1</span>],final_path);<br>    <br>    <span class="hljs-keyword">if</span>(chdir(final_path) == <span class="hljs-number">-1</span>)<br>    &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;cd: no such directory %s\n&quot;</span>,final_path);<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;<br>    &#125;<br>    <span class="hljs-keyword">return</span> final_path;   <br>&#125;<br><br><span class="hljs-comment">// ls内建函数 仅支持-l -h -h等于不支持 哈哈</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">buildin_ls</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> argc,<span class="hljs-type">char</span>** argv)</span><br>&#123;<br>    <span class="hljs-type">char</span>* pathname = <span class="hljs-literal">NULL</span>;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">stat</span> <span class="hljs-title">file_stat</span>;</span><br>    <span class="hljs-built_in">memset</span>(&amp;file_stat,<span class="hljs-number">0</span>,<span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> stat));<br>    <span class="hljs-type">bool</span> long_info = <span class="hljs-literal">false</span>;<br>    <span class="hljs-type">uint32_t</span> arg_path_nr = <span class="hljs-number">0</span>;  <br>    <span class="hljs-type">uint32_t</span> arg_idx = <span class="hljs-number">1</span>;    <span class="hljs-comment">//第一个字符串是 ls 跳过</span><br>    <span class="hljs-keyword">while</span>(arg_idx &lt; argc)    <span class="hljs-comment">//仅仅支持 ls 或者 ls -l 或者 ls -l path的形式</span><br>    &#123;<br>        <span class="hljs-keyword">if</span>(argv[arg_idx][<span class="hljs-number">0</span>] == <span class="hljs-string">&#x27;-&#x27;</span>)<br>        &#123;<br>            <span class="hljs-keyword">if</span>(!<span class="hljs-built_in">strcmp</span>(<span class="hljs-string">&quot;-l&quot;</span>,argv[arg_idx]))<br>                long_info = <span class="hljs-literal">true</span>;<br>            <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(!<span class="hljs-built_in">strcmp</span>(<span class="hljs-string">&quot;-h&quot;</span>,argv[arg_idx]))<br>            &#123;<br>                <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;usage: -l list all all information about the file.\nnot support -h now sry - -\n&quot;</span>);<br>                <span class="hljs-keyword">return</span>;<br>            &#125;<br>            <span class="hljs-keyword">else</span><br>            &#123;<br>                <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;ls: invaild option %s\nTry &#x27;ls -l&#x27; u can get what u want\n&quot;</span>,argv[arg_idx]);<br>                <span class="hljs-keyword">return</span>; <br>            &#125;<br>        &#125;<br>        <span class="hljs-keyword">else</span><br>        &#123;<br>            <span class="hljs-keyword">if</span>(arg_path_nr == <span class="hljs-number">0</span>)<br>            &#123;<br>                pathname = argv[arg_idx];<br>                arg_path_nr = <span class="hljs-number">1</span>;<br>            &#125;<br>            <span class="hljs-keyword">else</span><br>            &#123;<br>                <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;ls: only support one path\n&quot;</span>);<br>                <span class="hljs-keyword">return</span>;<br>            &#125;<br>        &#125;<br>        ++arg_idx;<br>    &#125;<br>    <br>    <span class="hljs-keyword">if</span>(pathname == <span class="hljs-literal">NULL</span>) <span class="hljs-comment">//ls 或者 ls -l</span><br>    &#123;<br>        <span class="hljs-comment">//得到工作目录</span><br>        <span class="hljs-keyword">if</span>(getcwd(final_path,MAX_PATH_LEN) != <span class="hljs-literal">NULL</span>)<br>	    pathname = final_path;<br>	<span class="hljs-keyword">else</span><br>	&#123;<br>	    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;ls: getcwd for default path failed\n&quot;</span>);<br>	    <span class="hljs-keyword">return</span>;<br>	&#125;<br>    &#125;<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>        make_clear_abs_path(pathname,final_path);<br>        pathname = final_path;<br>    &#125;<br>    <br>    <span class="hljs-comment">//目录下的文件</span><br>    <span class="hljs-keyword">if</span>(stat(pathname,&amp;file_stat) == <span class="hljs-number">-1</span>)<br>    &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;ls: cannot access %s: No such file or directory\n&quot;</span>,pathname);<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br>    <br>    <span class="hljs-keyword">if</span>(file_stat.st_filetype == FT_DIRECTORY)  <span class="hljs-comment">//得到目录文件才继续</span><br>    &#123;<br>        <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">dir</span>* <span class="hljs-title">dir</span> =</span> opendir(pathname); <span class="hljs-comment">//得到目录指针</span><br>        <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">dir_entry</span>* <span class="hljs-title">dir_e</span> =</span> <span class="hljs-literal">NULL</span>;<br>        <span class="hljs-type">char</span> sub_pathname[MAX_PATH_LEN] = &#123;<span class="hljs-number">0</span>&#125;;<br>        <span class="hljs-type">uint32_t</span> pathname_len   = <span class="hljs-built_in">strlen</span>(pathname);<br>        <span class="hljs-type">uint32_t</span> last_char_idx  = pathname_len - <span class="hljs-number">1</span>;<br>        <span class="hljs-built_in">memcpy</span>(sub_pathname,pathname,pathname_len);<br>        <br>        <span class="hljs-comment">//方便后面得到当前目录下的文件stat信息 </span><br>        <span class="hljs-comment">//加个/ 之后每个文件加文件名stat即可</span><br>        <span class="hljs-keyword">if</span>(sub_pathname[last_char_idx] != <span class="hljs-string">&#x27;/&#x27;</span>) <br>        &#123;<br>            sub_pathname[pathname_len] = <span class="hljs-string">&#x27;/&#x27;</span>; <br>            ++pathname_len;<br>        &#125;<br>        <br>        rewinddir(dir);  <span class="hljs-comment">//目录指针指向0  方便readdir遍历目录项</span><br>        <span class="hljs-keyword">if</span>(long_info)    <span class="hljs-comment">// ls -l 这里是目录的ls</span><br>        &#123;<br>            <span class="hljs-type">char</span> ftype;<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;total: %d\n&quot;</span>,file_stat.st_size);<br>            <span class="hljs-keyword">while</span>((dir_e = readdir(dir)))    <span class="hljs-comment">//通过readdir来遍历目录项 我还专门回去看了看这个函数</span><br>            &#123;<br>                ftype = <span class="hljs-string">&#x27;d&#x27;</span>;<br>                <span class="hljs-keyword">if</span>(dir_e-&gt;f_type == FT_REGULAR)<br>                    ftype = <span class="hljs-string">&#x27;-&#x27;</span>;<br>                sub_pathname[pathname_len] = <span class="hljs-number">0</span>; <span class="hljs-comment">//把字符串末尾设0 方便strcat函数</span><br>                <span class="hljs-built_in">strcat</span>(sub_pathname,dir_e-&gt;filename);<br>                <span class="hljs-built_in">memset</span>(&amp;file_stat,<span class="hljs-number">0</span>,<span class="hljs-keyword">sizeof</span>(<span class="hljs-keyword">struct</span> stat));<br>                <span class="hljs-keyword">if</span>(stat(sub_pathname,&amp;file_stat) == <span class="hljs-number">-1</span>)<br>                &#123;<br>                    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;ls: cannot access %s:No such file or directory\n&quot;</span>,dir_e-&gt;filename);<br>                    <span class="hljs-keyword">return</span>;<br>                &#125;<br>                <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%c    %d    %d    %s\n&quot;</span>,ftype,dir_e-&gt;i_no,file_stat.st_size,dir_e-&gt;filename);<br>            &#125;<br>        &#125;<br>        <span class="hljs-keyword">else</span>  <span class="hljs-comment">//仅仅是ls 把文件名写出来即可</span><br>        &#123;<br>            <span class="hljs-keyword">while</span>((dir_e = readdir(dir)))<br>                <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%s  &quot;</span>,dir_e-&gt;filename);<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;\n&quot;</span>);<br>        &#125;<br>        closedir(dir);<br>    &#125;<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>        <span class="hljs-keyword">if</span>(long_info)<br>             <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;-    %d    %d    %s\n&quot;</span>,file_stat.st_ino,file_stat.st_size,pathname);<br>	<span class="hljs-keyword">else</span><br>	    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%s\n&quot;</span>,pathname);<br>    &#125;<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">buildin_ps</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> argc,<span class="hljs-type">char</span>** argv)</span><br>&#123;<br>     <span class="hljs-comment">//不应该有参数</span><br>    <span class="hljs-keyword">if</span>(argc != <span class="hljs-number">1</span>)<br>    &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;ps: no argument support!\n&quot;</span>);<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br>    ps();<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">buildin_clear</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> argc,<span class="hljs-type">char</span>** argv)</span><br>&#123;<br>    <span class="hljs-keyword">if</span>(argc != <span class="hljs-number">1</span>)<br>    &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;clear: no argument support!\n&quot;</span>);<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br>    clear();<br>&#125;<br><br><span class="hljs-type">int32_t</span> <span class="hljs-title function_">buildin_mkdir</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> argc,<span class="hljs-type">char</span>** argv)</span><br>&#123;<br>    <span class="hljs-comment">//必须要有一个 安装路径参数</span><br>    <span class="hljs-type">int32_t</span> ret = <span class="hljs-number">-1</span>;<br>    <span class="hljs-keyword">if</span>(argc != <span class="hljs-number">2</span>)<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;mkdir: only support 1 argument!\n&quot;</span>);<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>        make_clear_abs_path(argv[<span class="hljs-number">1</span>],final_path);<br>        <span class="hljs-keyword">if</span>(<span class="hljs-built_in">strcmp</span>(<span class="hljs-string">&quot;/&quot;</span>,final_path))  <span class="hljs-comment">//不是根目录 根目录一直都在</span><br>        &#123;<br>            <span class="hljs-keyword">if</span>(mkdir(final_path) == <span class="hljs-number">0</span>)<br>                ret = <span class="hljs-number">0</span>;<br>            <span class="hljs-keyword">else</span><br>                <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;mkdir: create directory %s failed.\n&quot;</span>,argv[<span class="hljs-number">1</span>]);<br>        &#125;<br>    &#125;<br>    <span class="hljs-keyword">return</span> ret;<br>&#125;<br><br><span class="hljs-type">int32_t</span> <span class="hljs-title function_">buildin_rmdir</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> argc,<span class="hljs-type">char</span>** argv)</span><br>&#123;<br>    <span class="hljs-type">int32_t</span> ret = <span class="hljs-number">-1</span>;<br>    <span class="hljs-keyword">if</span>(argc != <span class="hljs-number">2</span>)<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;rmdir: only support 1 argument!\n&quot;</span>);<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>        make_clear_abs_path(argv[<span class="hljs-number">1</span>],final_path);<br>        <span class="hljs-keyword">if</span>(<span class="hljs-built_in">strcmp</span>(<span class="hljs-string">&quot;/&quot;</span>,final_path)) <span class="hljs-comment">// 不能删除根目录</span><br>        &#123;<br>            <span class="hljs-keyword">if</span>(rmdir(final_path) == <span class="hljs-number">0</span>)<br>                ret = <span class="hljs-number">0</span>;<br>            <span class="hljs-keyword">else</span>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;rmdir: remove %s failed\n&quot;</span>);<br>        &#125;<br>    &#125;<br>    <span class="hljs-keyword">return</span> ret;<br>&#125;<br><br><span class="hljs-type">int32_t</span> <span class="hljs-title function_">buildin_rm</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> argc,<span class="hljs-type">char</span>** argv)</span><br>&#123;<br>    <span class="hljs-type">int32_t</span> ret = <span class="hljs-number">-1</span>;<br>    <span class="hljs-keyword">if</span>(argc != <span class="hljs-number">2</span>)<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;rm: only support 1 argument!\n&quot;</span>);<br>    <span class="hljs-keyword">else</span><br>    &#123;<br>        make_clear_abs_path(argv[<span class="hljs-number">1</span>],final_path);<br>        <span class="hljs-keyword">if</span>(<span class="hljs-built_in">strcmp</span>(<span class="hljs-string">&quot;/&quot;</span>,final_path))<br>        &#123;<br>            <span class="hljs-keyword">if</span>(unlink(final_path) == <span class="hljs-number">0</span>)<br>                ret = <span class="hljs-number">0</span>;<br>            <span class="hljs-keyword">else</span>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;rm: delete %s failed\n&quot;</span>,argv[<span class="hljs-number">1</span>]); <br>        &#125;<br>    &#125;<br>    <span class="hljs-keyword">return</span> ret;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<p>那么我们在shell中键入的命令如何真正被调用呢，对于内建命令来说，其实就是在shell的调用函数里面，对输入的参数中第一个参数进行switch，从而调用不同的函数</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">my_shell</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    cwd_cache[<span class="hljs-number">0</span>] = <span class="hljs-string">&#x27;/&#x27;</span>;<br>    cwd_cache[<span class="hljs-number">1</span>] = <span class="hljs-number">0</span>;<br>    <span class="hljs-type">int</span> argc = <span class="hljs-number">-1</span>;<br>    <span class="hljs-keyword">while</span>(<span class="hljs-number">1</span>)<br>    &#123;<br>        print_prompt();<br>        <span class="hljs-built_in">memset</span>(cmd_line,<span class="hljs-number">0</span>,cmd_len);<br>        <span class="hljs-built_in">memset</span>(final_path,<span class="hljs-number">0</span>,MAX_PATH_LEN);<br>        <span class="hljs-built_in">memset</span>(argv,<span class="hljs-number">0</span>,<span class="hljs-keyword">sizeof</span>(<span class="hljs-type">char</span>*) * MAX_ARG_NR);<br>        readline(cmd_line,cmd_len);<br>        <span class="hljs-keyword">if</span>(cmd_line[<span class="hljs-number">0</span>] == <span class="hljs-number">0</span>)<br>            <span class="hljs-keyword">continue</span>;<br>            <br>        argc = <span class="hljs-number">-1</span>;  <br>        argc = cmd_parse(cmd_line,argv,<span class="hljs-string">&#x27; &#x27;</span>);<br>        <span class="hljs-keyword">if</span>(argc == <span class="hljs-number">-1</span>)<br>        &#123;<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;num of arguments exceed %d\n&quot;</span>,MAX_ARG_NR);<br>            <span class="hljs-keyword">continue</span>;<br>        &#125;<br>        <span class="hljs-keyword">if</span>(!<span class="hljs-built_in">strcmp</span>(<span class="hljs-string">&quot;ls&quot;</span>,argv[<span class="hljs-number">0</span>]))<br>            buildin_ls(argc,argv);<br>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(!<span class="hljs-built_in">strcmp</span>(<span class="hljs-string">&quot;pwd&quot;</span>,argv[<span class="hljs-number">0</span>]))<br>            buildin_pwd(argc,argv);<br>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(!<span class="hljs-built_in">strcmp</span>(<span class="hljs-string">&quot;ps&quot;</span>,argv[<span class="hljs-number">0</span>]))<br>            buildin_ps(argc,argv);<br>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(!<span class="hljs-built_in">strcmp</span>(<span class="hljs-string">&quot;cd&quot;</span>,argv[<span class="hljs-number">0</span>]))<br>        &#123;<br>            <span class="hljs-keyword">if</span>(buildin_cd(argc,argv) != <span class="hljs-literal">NULL</span>)<br>            &#123;<br>                <span class="hljs-built_in">memset</span>(cwd_cache,<span class="hljs-number">0</span>,MAX_PATH_LEN);<br>                <span class="hljs-built_in">strcpy</span>(cwd_cache,final_path);<br>            &#125;<br>        &#125;<br>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(!<span class="hljs-built_in">strcmp</span>(<span class="hljs-string">&quot;clear&quot;</span>,argv[<span class="hljs-number">0</span>]))<br>            buildin_clear(argc,argv);<br>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(!<span class="hljs-built_in">strcmp</span>(<span class="hljs-string">&quot;mkdir&quot;</span>,argv[<span class="hljs-number">0</span>]))<br>            buildin_mkdir(argc,argv);<br>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(!<span class="hljs-built_in">strcmp</span>(<span class="hljs-string">&quot;rmdir&quot;</span>,argv[<span class="hljs-number">0</span>]))<br>            buildin_rmdir(argc,argv);   <br>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(!<span class="hljs-built_in">strcmp</span>(<span class="hljs-string">&quot;rm&quot;</span>,argv[<span class="hljs-number">0</span>]))<br>            buildin_rm(argc,argv); <br>        <span class="hljs-keyword">else</span><br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;external command\n&quot;</span>);<br>    &#125;<br>    PANIC(<span class="hljs-string">&quot;my_shell: should not be here&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/15.3.png" srcset="/img/loading.gif" lazyload title="fork执行ls、pwd、ps、mkdir等命令"><br>测试的时候，一直重复键入命令多了之后，就会出现问题<br><code>03195344000i[KBD   ] internal keyboard buffer full, ignoring scancode.(9f)</code><br>像是环形缓冲区当初设计的时候有bug</p>
+<h2 id="15-3-有待开发从底层实现的一些命令"><a href="#15-3-有待开发从底层实现的一些命令" class="headerlink" title="15.3 有待开发从底层实现的一些命令"></a>15.3 有待开发从底层实现的一些命令</h2><p>该小节是纯概念上的介绍，并没有实现从底层的开发，实现这些命令需要对系统里的内存管理，文件系统管理等有非常熟悉的掌握，以及如果需要像Linux一样实现这些命令，就需要修改前面很多数据结构的定义，例如我们的文件结构只设计了三个参数，需要扩充，但是非常容易有牵一发而动全身的情况发生，因此如果需要在现有的基础上实现，那么就只能粗略地、简单地实现，作用并不是很大（虽然前面有些功能例如内存管理的实现也比较简单粗略）。因此，决定从概念上掌握这几个命令。</p>
+<h3 id="15-3-1-exec"><a href="#15-3-1-exec" class="headerlink" title="15.3.1 exec"></a>15.3.1 exec</h3><ol>
+<li><p>exec 的功能？<br>答：exec 会把一个可执行文件的绝对路径作为参数，把当前正在运行的用户进程的进程体（代码段、数据段、堆栈）用该可执行文件的进程体替换掉，从而实现了新进程的执行。注意，这里只替换了进程体，并没有替换其它内容，也就是进程的PCB没有被替换，新进程的pid依然是老进程的pid</p>
+</li>
+<li><p>为什么要有 exec？<br>答：有了exec，用户就可以完成任意外部命令的运行，或者说任意外部进程的进行，操作系统只会提供少部分的进程，实际上在使用中都是通过操作系统加载外部进程来完成我们所需要的功能的，exec起到的就是这个加载的作用</p>
+</li>
+<li><p>exec 的内部实现？<br>答：我们已经知道了exec就是将外部可执行文件的内容替换掉用户进程的进程体，外部可执行文件是ELF格式的，因此需要熟悉ELF格式，解析ELF格式的可执行文件，再将其中关键的信息覆盖掉原来进程的进程体。</p>
+</li>
+</ol>
+<h3 id="15-3-2-系统调用wait和exit"><a href="#15-3-2-系统调用wait和exit" class="headerlink" title="15.3.2 系统调用wait和exit"></a>15.3.2 系统调用wait和exit</h3><p>wait和exit总是配合使用的</p>
+<ol>
+<li><p>exit的表面功能？<br>答：exit由子进程调用，是子进程结束运行。</p>
+</li>
+<li><p>exit的本质？<br>答：子进程结束后，会将子进程的返回值传递给内核，内核在幕后会将子进程除了PCB之外的所有资源回收。子进程的PCB不由exit释放，因为子进程的返回值需要传递给父进程，但是进程之间是相互独立的，所以通过将返回值存到子进程的PCB中，PCB处于内核空间，因此可以被进程共享。</p>
+</li>
+<li><p>wait的表面功能？<br>答：父进程调用，使父进程阻塞自己，直到某个子进程调用exit结束运行，获得子进程的返回值。</p>
+</li>
+<li><p>wait的本质？<br>答：内核在幕后将子进程的返回值传递给父进程，也就是从子进程的PCB中找到子进程的返回值并传递给父进程，并唤醒阻塞的父进程，然后将子进程的PCB回收。</p>
+</li>
+<li><p>为什么需要用到wait和exit？<br>答：本质上为了解决线程同步问题，打个比方，某个父进程创建了一个子进程，让它帮忙去执行其它功能，但是父进程在某些时候希望子进程执行完某些功能后将结果给父进程，父进程再继续执行，因此是为了协调父子进程某些代码的执行次序问题，所以调用wait和exit来解决。</p>
+</li>
+<li><p>孤儿进程和僵尸进程是怎么来的？<br>答：不正常的wait和exit配合，就会产生孤儿进程和僵尸进程。</p>
+<ul>
+<li>孤儿进程：在wait和exit的配合中，父进程因为一些原因，提前退出，但是它的所有子进程都还在运行还没有exit，那么这些子进程都有自己的进程体，同时失去了父进程，成为孤儿进程。不过还好，这些子进程会被init进程收留，因为init进程是所有进程的父进程</li>
+<li>僵尸进程：子进程正常exit了，释放了进程体，但是子进程的PCB还没释放，需要父进程通过wait获得子进程的返回值的同时释放子进程的PCB，如果这时父进程没有wait，那么子进程的PCB就一直存在于内核空间，变成一个没有身体，只有头部的僵尸进程。</li>
+<li>孤儿进程和僵尸进程的危害：孤儿进程好像没有什么特别大影响，因为最终会有init进程收尾。但是僵尸进程如果大量存在，会占用内核空间，同时占用pid号导致内核没有pid可以分配给新的进程，这种情况下只能把僵尸进程的父进程kill掉，从而释放其所有子进程的PCB。</li>
+</ul>
+</li>
+</ol>
+<h3 id="15-3-3-管道pipe"><a href="#15-3-3-管道pipe" class="headerlink" title="15.3.3 管道pipe"></a>15.3.3 管道pipe</h3><p>进程被设计成是互相独立的，但是肯定会有一些应用需要进程之间相互通信，实现进程之间通信的方法有很多种，例如消息队列，共享内存，socket网络通信，管道pipe等，下面介绍管道的原理。在Linux中，一切皆文件，所以管道也是作为文件来操作的。</p>
+<ol>
+<li><p>管道的位置？<br>答：多个进程之间需要分享数据，势必要有个公共区域用来共享，所以很显然，管道存在于内存之中并且在内核空间里。并且由于不知道管道需要共享的数据量，所以一般将管道设计为一个环形缓冲区进行实现。<br><img src="/../img/15.4.png" srcset="/img/loading.gif" lazyload title="管道的位置"></p>
+</li>
+<li><p>管道的实体？<br>答：管道有两端，一端用于从管道中读出数据，另一端用于从管道写入数据，这两端使用文件描述符的方式来读取，因此进程创建管道实际上是内核为其返回了用于读取管道缓冲区的文件描述符，一个描述符只用于读，另一个描述符只用于写。</p>
+</li>
+<li><p>管道的创建？<br>答：通常情况，用户进程会为内核提供一个长度为2的文件描述符数组，内核在该数组中写入管道的两个文件描述符，假设该数组叫fd，则fd[0]用于读取管道，fd[1]用于写入管道。</p>
+</li>
+<li><p>管道的使用？<br>答：分为匿名管道和有名管道。</p>
+<ul>
+<li>匿名管道：一个进程在创建管道后得到数组fd，紧接着立马进行fork创建一个子进程，子进程有和父进程一样的资源，所以子进程也有一样的fd数组，此时可以通过管道完成父子进程的通信。</li>
+<li>有名管道：如果是多个进程之间需要通信，某个进程A创建管道后，需要让其他进程也知道该管道（某个内核缓冲区）的位置，也就是文件描述符，匿名进程是通过fork让子进程知道的fd数组，对于没有父子关系的多个进程而言，则需要利用有名管道，使得该管道对其他进程“可见”，例如Linux就会通过mkfifo命令创建有名管道。<br><img src="/../img/15.5.png" srcset="/img/loading.gif" lazyload title="管道的使用"></li>
+</ul>
+</li>
+</ol>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="category-chain-item">从零搭建操作系统</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>“从零搭建操作系统” 第十五章 系统交互</div>
+      <div>https://yigefanqie-beiyi.github.io/2025/01/14/“从零搭建操作系统” 第十五章/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Bei</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年1月14日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/01/15/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E5%AE%8C%E7%BB%93/" title="“从零搭建操作系统” 完结">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">“从零搭建操作系统” 完结</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/01/10/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E5%8D%81%E5%9B%9B%E7%AB%A0/" title="“从零搭建操作系统” 第十四章 文件系统">
+                        <span class="hidden-mobile">“从零搭建操作系统” 第十四章 文件系统</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <span>Yi</span> <i class="iconfont icon-love"></i> <span>Yi</span> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
