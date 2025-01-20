@@ -27,7 +27,7 @@
 <meta property="og:description" content="8.1 c++内联函数 内联函数：使用inline关键字定义1234inline int add(int a, int b)&#123;    return a + b;&#125; 内联函数遵循函数的定义规范，有明确的函数名，参数列表和返回类型，这是它和传统C风格中的宏定义#define最大的区别 编译器会选择性地判断内联函数，如果内联函数中函数体过大或进行了递归（内联函数不能自己调用自己），则">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-01-19T12:41:51.000Z">
-<meta property="article:modified_time" content="2025-01-19T14:27:52.861Z">
+<meta property="article:modified_time" content="2025-01-20T06:04:08.742Z">
 <meta property="article:author" content="Bei">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -222,7 +222,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.5k 字
+          2.3k 字
         
       </span>
     
@@ -233,7 +233,7 @@
         
         
         
-          13 分钟
+          20 分钟
         
       </span>
     
@@ -313,7 +313,72 @@
 <li>与常规函数一样，模板函数也是可以重载的，例如：<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;<br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">swap</span><span class="hljs-params">(T&amp; a, T&amp; b)</span></span>;<br><br><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;<br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">swap</span><span class="hljs-params">(T* a, T* b, <span class="hljs-type">int</span> n)</span></span>;<br></code></pre></td></tr></table></figure>
 编译器将会根据函数调用时参数的类型进行自动匹配</li>
 <li>模板函数也是有局限性的，例如模板里有<code>(a &lt; b)</code>的判断条件，如果函数调用时输入参数是int类型，则可以正常使用；如果输入类型是结构体，则无法正常使用，处理这种情况有两种办法：重载这个<code>&lt;</code>，让它能处理输入类型是结构体；或者为特定类型提供具体化的模板定义。</li>
-<li></li>
+<li>显示具体化：提供一个具体化函数定义，其中包含所需的代码，当编译器找到和函数调用匹配的具体化定义时，将使用该定义<ul>
+<li>显示具体化的原型和定义以<code>template &lt;&gt;</code>打头</li>
+<li>优先级：常规函数 &gt; 显示具体化函数 &gt; 普通模板函数</li>
+<li>定义形式例如：<code>template &lt;&gt; void Swap&lt;job&gt;(job&amp;, job&amp;)</code>，其中的Swap<job>中的<job>是可选的，也可以不写</li>
+</ul>
+</li>
+<li>实例化和具体化：<ul>
+<li>代码中包含函数模版并不会生成函数定义，只是提供了一个方案，当编译器利用这个模板生成函数定义时，得到的就是模版的实力，叫做实例化，例如执行<code>Swap(a, b)</code>，编译器会自动找到模板并生成一个实例，这个实例才能叫做函数定义；这种通过调用函数时提供具体类型参数的实例化被称为隐式实例化。</li>
+<li>还有一种显示实例化，可以直接命令编译器创建特定的实例，语法是：声明所需的种类-用&lt;&gt;表示类型，并在前面加上关键字template，例如<code>template void Swap&lt;int&gt;(int, int)</code>，编译器在看到这句声明后，将会使用Swap模板生成一个使用类型为int的实例，即“使用Swap模板生成int类型的函数定义”</li>
+<li>要将显示实例化和显示具体化作区分，显示具体化的代码类似为<code>template &lt;&gt; void Swap&lt;int&gt;(int&amp;, int&amp;)</code>，意思是“不要使用Swap模板来生成定义，要专门使用为int类型显示定义的函数定义”</li>
+<li>显示实例化，隐式实例化，显示具体化都统称为具体化</li>
+</ul>
+</li>
+<li>一个函数调用对应多个函数版本时，编译器该如何选择？从最佳到最差的顺序如下：<ul>
+<li>完全匹配，但常规函数由于模板</li>
+<li>提升转换</li>
+<li>标准转换</li>
+<li>用户定义的转换</li>
+</ul>
+</li>
+<li>完全匹配允许的无关紧要的转换：<table>
+<thead>
+<tr>
+<th><strong>转换类型</strong></th>
+<th><strong>描述</strong></th>
+<th><strong>示例</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>引用绑定</td>
+<td>将实参绑定到引用类型（包括左值引用和右值引用）。</td>
+<td><code>int</code> → <code>int&amp;</code> 或 <code>int&amp;&amp;</code></td>
+</tr>
+<tr>
+<td>数组到指针的转换</td>
+<td>将数组类型转换为指向数组首元素的指针。</td>
+<td><code>int[]</code> → <code>int*</code></td>
+</tr>
+<tr>
+<td>函数到函数指针的转换</td>
+<td>将函数类型转换为函数指针类型。</td>
+<td><code>void f()</code> → <code>void (*pf)()</code></td>
+</tr>
+<tr>
+<td>添加 <code>const</code> 或 <code>volatile</code> 限定符</td>
+<td>在参数类型中添加 <code>const</code> 或 <code>volatile</code> 限定符。</td>
+<td><code>int</code> → <code>const int</code> 或 <code>volatile int</code></td>
+</tr>
+<tr>
+<td>指针类型转换</td>
+<td>在指针类型中添加 <code>const</code> 或 <code>volatile</code> 限定符。</td>
+<td><code>int*</code> → <code>const int*</code> 或 <code>volatile int*</code></td>
+</tr>
+<tr>
+<td>标准转换序列中的“平凡转换”</td>
+<td>包括类型提升（如 <code>char</code> → <code>int</code>）、浮点数提升（如 <code>float</code> → <code>double</code>）等。</td>
+<td><code>char</code> → <code>int</code> 或 <code>float</code> → <code>double</code></td>
+</tr>
+<tr>
+<td>用户定义的隐式类型转换</td>
+<td>如果用户定义了隐式类型转换操作符或构造函数，这些转换也可能被视为完全匹配的一部分。</td>
+<td><code>class A</code> → <code>class B</code>（如果定义了隐式转换）</td>
+</tr>
+</tbody></table>
+</li>
+<li>在c++98中，会出现无法判断函数模板内某个参数是什么类型的问题，因此c++11增加了关键字decltype，用于获取表达式的类型。它允许程序员在编译时推导出变量或表达式的类型，并可以将该类型用作其他声明的一部分。</li>
 </ol>
 
                 
