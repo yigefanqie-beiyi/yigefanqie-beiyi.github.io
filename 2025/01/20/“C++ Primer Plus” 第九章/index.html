@@ -19,21 +19,21 @@
   <meta name="author" content="Bei">
   <meta name="keywords" content="">
   
-    <meta name="description" content="8.1 c++内联函数 内联函数：使用inline关键字定义1234inline int add(int a, int b)&#123;    return a + b;&#125; 内联函数遵循函数的定义规范，有明确的函数名，参数列表和返回类型，这是它和传统C风格中的宏定义#define最大的区别 编译器会选择性地判断内联函数，如果内联函数中函数体过大或进行了递归（内联函数不能自己调用自己），则">
+    <meta name="description" content="9.1 单独编译都是些头文件，防重复包含的知识，跳过 9.2 存储持续性、作用域和链接性 c++使用四种不同的方案来存储数据，即有四种存储持续性： 自动存储持续性：在函数定义中声明的变量包括函数参数 静态存储持续性：在函数定义外定义的变量和用关键字static定义的变量，在程序运行过程中一直存在 动态存储持续性：用new运算符分配的内存将一直存在，直到使用delete，有时也被称为堆 线程存储持续">
 <meta property="og:type" content="article">
-<meta property="og:title" content="“C++ Primer Plus” 第八章 函数探幽">
-<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2025/01/19/%E2%80%9CC++%20Primer%20Plus%E2%80%9D%20%E7%AC%AC%E5%85%AB%E7%AB%A0/index.html">
+<meta property="og:title" content="“C++ Primer Plus” 第九章 内存模型和名称空间">
+<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2025/01/20/%E2%80%9CC++%20Primer%20Plus%E2%80%9D%20%E7%AC%AC%E4%B9%9D%E7%AB%A0/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="8.1 c++内联函数 内联函数：使用inline关键字定义1234inline int add(int a, int b)&#123;    return a + b;&#125; 内联函数遵循函数的定义规范，有明确的函数名，参数列表和返回类型，这是它和传统C风格中的宏定义#define最大的区别 编译器会选择性地判断内联函数，如果内联函数中函数体过大或进行了递归（内联函数不能自己调用自己），则">
+<meta property="og:description" content="9.1 单独编译都是些头文件，防重复包含的知识，跳过 9.2 存储持续性、作用域和链接性 c++使用四种不同的方案来存储数据，即有四种存储持续性： 自动存储持续性：在函数定义中声明的变量包括函数参数 静态存储持续性：在函数定义外定义的变量和用关键字static定义的变量，在程序运行过程中一直存在 动态存储持续性：用new运算符分配的内存将一直存在，直到使用delete，有时也被称为堆 线程存储持续">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2025-01-19T12:41:51.000Z">
-<meta property="article:modified_time" content="2025-01-20T06:04:08.742Z">
+<meta property="article:published_time" content="2025-01-20T06:06:07.000Z">
+<meta property="article:modified_time" content="2025-01-21T05:08:16.275Z">
 <meta property="article:author" content="Bei">
 <meta name="twitter:card" content="summary_large_image">
   
   
   
-  <title>“C++ Primer Plus” 第八章 函数探幽 - Hexo</title>
+  <title>“C++ Primer Plus” 第九章 内存模型和名称空间 - Hexo</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -199,7 +199,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="“C++ Primer Plus” 第八章 函数探幽"></span>
+            <span id="subtitle" data-typed-text="“C++ Primer Plus” 第九章 内存模型和名称空间"></span>
           
         </div>
 
@@ -210,8 +210,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-01-19 20:41" pubdate>
-          2025年1月19日 晚上
+        <time datetime="2025-01-20 14:06" pubdate>
+          2025年1月20日 下午
         </time>
       </span>
     
@@ -222,7 +222,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.3k 字
+          1.6k 字
         
       </span>
     
@@ -233,7 +233,7 @@
         
         
         
-          20 分钟
+          14 分钟
         
       </span>
     
@@ -270,117 +270,57 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">“C++ Primer Plus” 第八章 函数探幽</h1>
+            <h1 id="seo-header">“C++ Primer Plus” 第九章 内存模型和名称空间</h1>
             
             
               <div class="markdown-body">
                 
-                <h2 id="8-1-c-内联函数"><a href="#8-1-c-内联函数" class="headerlink" title="8.1 c++内联函数"></a>8.1 c++内联函数</h2><ol>
-<li>内联函数：使用<code>inline</code>关键字定义<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-type">int</span> <span class="hljs-title">add</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b)</span></span><br><span class="hljs-function"></span>&#123;<br>    <span class="hljs-keyword">return</span> a + b;<br>&#125;<br></code></pre></td></tr></table></figure></li>
-<li>内联函数遵循函数的定义规范，有明确的函数名，参数列表和返回类型，这是它和传统C风格中的宏定义#define最大的区别</li>
-<li>编译器会选择性地判断内联函数，如果内联函数中函数体过大或进行了递归（内联函数不能自己调用自己），则编译器认为使用内联函数并不值得抵消普通函数切换过程带来的开销，因此即使加了inline关键字，也会把函数认为是普通函数。</li>
-<li>如果内联函数的函数体小，则会用内联代码替换掉函数调用时的代码，有点类似宏定义#define</li>
-<li>内联函数适用于那些调用频繁且函数体较小的函数。例如一些简单的计算函数、获取属性值的函数等。使用内联函数可以减少函数调用的开销，提高程序的运行效率，同时又保留了函数的类型检查和调试等优点。</li>
-<li>宏定义则适用于一些简单的文本替换场景，如定义常量、简单的代码片段等。</li>
-</ol>
-<h2 id="8-2-引用变量"><a href="#8-2-引用变量" class="headerlink" title="8.2 引用变量"></a>8.2 引用变量</h2><ol>
-<li>引用变量主要作用是用作函数的形参，通过将引用变量作为参数，函数将使用原始数据而不是其副本，节省资源，但要注意此时函数内的操作将可能会修改参数本身。</li>
-<li>引用更接近<code>const</code>指针，必须在创建的时候进行初始化，一旦和某个变量关联起来，就将一直效忠于它。<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-type">int</span>&amp; a = b;<br></code></pre></td></tr></table></figure></li>
-<li>如果程序员的意图是让函数使用传递给它的信息，而不对这些信息进行修改，同时又想使用引用变量不产生变量副本，则应该使用常量应用，也就是在前面加入关键字<code>const</code>，例如<code>const int&amp; a</code></li>
-<li>使用const可以避免无意中对数据的修改，并且能够处理const和非const的实参，否则只能接受非const的实参</li>
-<li>c++11新增了右值引用，这种引用可指向右值，是使用&amp;&amp;声明的</li>
-<li>一般的常规变量直接使用值传递，稍微复杂点的变量使用引用参数传递，例如结构体，类等</li>
-<li>由于c++继承的特性，可以定义一个接受基类引用作为参数的函数，调用该函数时，可以将基类对象作为参数，也可以将派生类对象作为参数，例如ostream&amp;作为参数的函数，可以接收ostream对象也可以接受ofstream对象</li>
-</ol>
-<h2 id="8-3-默认参数"><a href="#8-3-默认参数" class="headerlink" title="8.3 默认参数"></a>8.3 默认参数</h2><ol>
-<li>例如<code>char* left(const char* str, int n = 1);</code> 在使用这个函数时可以直接使用<code>left(str, 2)</code>，也可以省略掉后面的n，变成<code>left(str)</code>，这样会默认n&#x3D;1</li>
-<li>在以后设计类时，通过使用默认参数，可以减少要定义的析构函数、方法、以及方法重载的数量</li>
-<li>必须从右向左添加默认值，也就是说如果要为函数中某个参数设置默认值，则参数列表中该参数右边的所有参数也必须提供默认值</li>
-</ol>
-<h2 id="8-4-函数重载"><a href="#8-4-函数重载" class="headerlink" title="8.4 函数重载"></a>8.4 函数重载</h2><ol>
-<li>函数多态（函数重载）可以让程序员能够使用多个同名的函数，c++通过上下文来确定重载函数对应的版本</li>
-<li>函数重载的关键是函数的参数列表，也称为函数特征标。通过特征标的不同来判断重载函数对应的版本</li>
-<li>类型引用和类型本身视为同一个特征标，因为对于<code>max(n)</code>而言，无法判断对应的函数原型是<code>int max(int n)</code>还是<code>int max(int&amp; n)</code></li>
-<li>函数重载的返回类型可以不同，但是特征标也必须不同，因为编译器是通过特征标唯一确定函数版本的</li>
-<li>没有必要滥用函数重载，仅当函数基本上执行相同的任务，但使用不同形式的数据时才应采用函数重载</li>
-</ol>
-<h2 id="8-5-函数模板"><a href="#8-5-函数模板" class="headerlink" title="8.5 函数模板"></a>8.5 函数模板</h2><ol>
-<li>函数模板是通用的函数描述，使用泛型来定义函数，其中泛型还可以用具体的类型例如int替换，c++的函数模板功能可以自动完成生成模板函数的过程</li>
-<li>例如定义一个交换模板：<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;<br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">swap</span><span class="hljs-params">(T&amp; a, T&amp; b)</span></span>&#123;<br>    T temp;<br>    temp = a;<br>    a = b;<br>    b = temp;<br>&#125;<br></code></pre></td></tr></table></figure></li>
-<li>上述交换模板中，template和typename是关键字必须要，typename可以换成class但是不建议换</li>
-<li>有了上述的函数模板后，在程序中就可以直接使用<code>swap(int数据, int数据)</code>和<code>swap(double数据, double数据)</code>，而不需要因为参数类型不同而定义多个函数</li>
-<li>函数模板只是使用起来方便，但其实并不会缩短最终的可执行程序，更常见的情形时将模板放在头文件中，并在需要使用模板的文件中包含头文件</li>
-<li>与常规函数一样，模板函数也是可以重载的，例如：<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;<br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">swap</span><span class="hljs-params">(T&amp; a, T&amp; b)</span></span>;<br><br><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;<br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">swap</span><span class="hljs-params">(T* a, T* b, <span class="hljs-type">int</span> n)</span></span>;<br></code></pre></td></tr></table></figure>
-编译器将会根据函数调用时参数的类型进行自动匹配</li>
-<li>模板函数也是有局限性的，例如模板里有<code>(a &lt; b)</code>的判断条件，如果函数调用时输入参数是int类型，则可以正常使用；如果输入类型是结构体，则无法正常使用，处理这种情况有两种办法：重载这个<code>&lt;</code>，让它能处理输入类型是结构体；或者为特定类型提供具体化的模板定义。</li>
-<li>显示具体化：提供一个具体化函数定义，其中包含所需的代码，当编译器找到和函数调用匹配的具体化定义时，将使用该定义<ul>
-<li>显示具体化的原型和定义以<code>template &lt;&gt;</code>打头</li>
-<li>优先级：常规函数 &gt; 显示具体化函数 &gt; 普通模板函数</li>
-<li>定义形式例如：<code>template &lt;&gt; void Swap&lt;job&gt;(job&amp;, job&amp;)</code>，其中的Swap<job>中的<job>是可选的，也可以不写</li>
+                <h2 id="9-1-单独编译"><a href="#9-1-单独编译" class="headerlink" title="9.1 单独编译"></a>9.1 单独编译</h2><p>都是些头文件，防重复包含的知识，跳过</p>
+<h2 id="9-2-存储持续性、作用域和链接性"><a href="#9-2-存储持续性、作用域和链接性" class="headerlink" title="9.2 存储持续性、作用域和链接性"></a>9.2 存储持续性、作用域和链接性</h2><ol>
+<li>c++使用四种不同的方案来存储数据，即有四种存储持续性：<ul>
+<li>自动存储持续性：在函数定义中声明的变量包括函数参数</li>
+<li>静态存储持续性：在函数定义外定义的变量和用关键字static定义的变量，在程序运行过程中一直存在</li>
+<li>动态存储持续性：用new运算符分配的内存将一直存在，直到使用delete，有时也被称为堆</li>
+<li>线程存储持续性（c++11）：在多核处理器的背景下，使用关键字thread_local声明的变量，则其生命周期和线程一样长</li>
 </ul>
 </li>
-<li>实例化和具体化：<ul>
-<li>代码中包含函数模版并不会生成函数定义，只是提供了一个方案，当编译器利用这个模板生成函数定义时，得到的就是模版的实力，叫做实例化，例如执行<code>Swap(a, b)</code>，编译器会自动找到模板并生成一个实例，这个实例才能叫做函数定义；这种通过调用函数时提供具体类型参数的实例化被称为隐式实例化。</li>
-<li>还有一种显示实例化，可以直接命令编译器创建特定的实例，语法是：声明所需的种类-用&lt;&gt;表示类型，并在前面加上关键字template，例如<code>template void Swap&lt;int&gt;(int, int)</code>，编译器在看到这句声明后，将会使用Swap模板生成一个使用类型为int的实例，即“使用Swap模板生成int类型的函数定义”</li>
-<li>要将显示实例化和显示具体化作区分，显示具体化的代码类似为<code>template &lt;&gt; void Swap&lt;int&gt;(int&amp;, int&amp;)</code>，意思是“不要使用Swap模板来生成定义，要专门使用为int类型显示定义的函数定义”</li>
-<li>显示实例化，隐式实例化，显示具体化都统称为具体化</li>
+<li>作用域和链接：<ul>
+<li>作用域描述了名称在文件的多大范围内可见，链接性描述了名称如何在不同单元之间共享</li>
+<li>c++的作用域分为局部和全局</li>
+<li>c++函数的作用域可以是整个类或整个名称空间，但不能是局部的</li>
 </ul>
 </li>
-<li>一个函数调用对应多个函数版本时，编译器该如何选择？从最佳到最差的顺序如下：<ul>
-<li>完全匹配，但常规函数由于模板</li>
-<li>提升转换</li>
-<li>标准转换</li>
-<li>用户定义的转换</li>
+<li>自动存储持续性：<ul>
+<li>默认情况下在函数中声明的函数参数和变量都属于自动变量，作用域为局部，没有链接性，当函数结束时这些变量会自动被释放</li>
+<li>自动变量的作用域在变量所在的花括号里，不包括包含的花括号，例如： <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c++">&#123;<br>    <span class="hljs-type">int</span> a = <span class="hljs-number">1</span>;<br>    &#123;<br>        <span class="hljs-type">int</span> a = <span class="hljs-number">2</span>;<br>        cout &lt;&lt; a;<br>    &#125;<br>    cout &lt;&lt; a;<br>&#125;<br></code></pre></td></tr></table></figure></li>
+<li>上述代码中，会先输出2再输出1，因为里面的花括号里新定义的a会隐藏以前的定义，新定义可见，旧定义暂时不可见，当里面的花括号内容执行完毕后新定义的a变量被释放，则旧定义又可见了</li>
+<li>当函数被调用时，其传递参数也属于自动变量，传递的自动变量被压入栈中，函数内部创建的自动变量也会压入栈，当函数执行完成后会将栈顶指针回复到函数调用前的位置，以达到释放自动变量的效果</li>
+<li>关键字register以前用于声明寄存器变量，也属于自动变量，它告诉编译器用CPU寄存器来存储自动变量，但c++11后这种关键字只是用来显示表明是自动变量，关键字auto以前是用来声明自动变量的，c++11后用来让编译器自动识别变量的类型</li>
 </ul>
 </li>
-<li>完全匹配允许的无关紧要的转换：<table>
-<thead>
-<tr>
-<th><strong>转换类型</strong></th>
-<th><strong>描述</strong></th>
-<th><strong>示例</strong></th>
-</tr>
-</thead>
-<tbody><tr>
-<td>引用绑定</td>
-<td>将实参绑定到引用类型（包括左值引用和右值引用）。</td>
-<td><code>int</code> → <code>int&amp;</code> 或 <code>int&amp;&amp;</code></td>
-</tr>
-<tr>
-<td>数组到指针的转换</td>
-<td>将数组类型转换为指向数组首元素的指针。</td>
-<td><code>int[]</code> → <code>int*</code></td>
-</tr>
-<tr>
-<td>函数到函数指针的转换</td>
-<td>将函数类型转换为函数指针类型。</td>
-<td><code>void f()</code> → <code>void (*pf)()</code></td>
-</tr>
-<tr>
-<td>添加 <code>const</code> 或 <code>volatile</code> 限定符</td>
-<td>在参数类型中添加 <code>const</code> 或 <code>volatile</code> 限定符。</td>
-<td><code>int</code> → <code>const int</code> 或 <code>volatile int</code></td>
-</tr>
-<tr>
-<td>指针类型转换</td>
-<td>在指针类型中添加 <code>const</code> 或 <code>volatile</code> 限定符。</td>
-<td><code>int*</code> → <code>const int*</code> 或 <code>volatile int*</code></td>
-</tr>
-<tr>
-<td>标准转换序列中的“平凡转换”</td>
-<td>包括类型提升（如 <code>char</code> → <code>int</code>）、浮点数提升（如 <code>float</code> → <code>double</code>）等。</td>
-<td><code>char</code> → <code>int</code> 或 <code>float</code> → <code>double</code></td>
-</tr>
-<tr>
-<td>用户定义的隐式类型转换</td>
-<td>如果用户定义了隐式类型转换操作符或构造函数，这些转换也可能被视为完全匹配的一部分。</td>
-<td><code>class A</code> → <code>class B</code>（如果定义了隐式转换）</td>
-</tr>
-</tbody></table>
+<li>静态持续变量：<ul>
+<li>c++为静态存储持续性提供3种链接性：外部链接性，内部链接性，无链接性</li>
+<li>无链接性：在函数定义的代码块内利用关键字static定义的变量，例如<code>static int x = 1</code>，这句代码在定义无链接性的静态变量时进行了初始化，如果多次执行该函数，初始化只会在第一次执行时进行初始化一次。当函数执行完成后，该静态变量也不会消失，依旧能够继续保存之前的内容，例如函数体内有<code>x++</code>，第一次执行完后x变为2，且x不会被释放，下一次调用该函数后x变为3</li>
+<li>内部链接性：在文件内，函数定义之外的区域利用关键字static定义的变量，该变量的作用域是整个文件，该文件的所有函数都能访问到该变量，且该变量也只能初始化一次，不会被自动释放</li>
+<li>外部链接性：在文件内，函数定义之外的区域定义的变量，该变量的作用域是整个文件，该文件的所有函数都能访问到该变量，同时，其它文件也可以使用该变量，只需要利用关键字extern进行声明，例如，在另一个文件进行声明<code>extern int x;</code>，编译器不会给该变量分配空间，自动在其他文件中寻找该变量。注意，利用extern声明的变量如果进行初始化，声明会变为定义，编译器会分配空间。</li>
+<li>很多时候只是想定义常量数据，并且有外部链接性，那么可以在定义这种全局变量前加关键字const防止修改</li>
+</ul>
 </li>
-<li>在c++98中，会出现无法判断函数模板内某个参数是什么类型的问题，因此c++11增加了关键字decltype，用于获取表达式的类型。它允许程序员在编译时推导出变量或表达式的类型，并可以将该类型用作其他声明的一部分。</li>
+<li>存储说明符和限定符：<ul>
+<li>存储说明符有：auto, register, static, extern, thread_local, mutable, 大部分已经介绍过，其中mutable可以用来指出，当结构体或者类变量被const修饰时，可以在里面的某个成员前加上mutable，声明这个成员是特殊的，依旧可以修改，例如： <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">data</span>&#123;<br>    <span class="hljs-type">int</span> a;<br>    <span class="hljs-keyword">mutable</span> <span class="hljs-type">int</span> b;<br>&#125;;<br><br><span class="hljs-type">const</span> data test = &#123;<span class="hljs-number">1</span>, <span class="hljs-number">2</span>&#125;;<br>test.b = <span class="hljs-number">3</span>;<br></code></pre></td></tr></table></figure></li>
+<li>上述代码也能通过</li>
+<li>限定符也叫cv限定符，主要是const和volatile</li>
+<li>volatile关键字表明，告诉编译器不要优化代码，因为即使程序代码没有修改某个变量，但是该变量也可能会变化。例如，某个变量和外部硬件有关，在系统不更改它的情况下，外部硬件的变化可能会导致该变量也变化，如果编译器发现经常访问该变量，则很可能自动优化为，将该变量存储在寄存器中以便提高访问速度，可是当某一次访问后编译器将该变量存储到寄存器中时，意味着下一次访问该变量时并不会发生变化，如果此时硬件导致变量发生了变化，而编译器访问的却是上一次存储的寄存器的值时，就会出现数据不准确的错误，volatile就是告诉编译器不要优化。</li>
+</ul>
+</li>
+<li>动态分配<ul>
+<li>c++使用new运算符来动态分配内存，分配的内存要通过delete手动释放</li>
+<li>与自动内存不同，动态内存不是LIFO的，通常编译器会使用三块独立的内存，一块用于静态变量，一块用于自动变量，一块用于动态内存（堆）</li>
+<li>定位new运算符：利用该特性需要包含头文件new，可以让分配的内存不在堆里自动分配，而是制定想要使用的位置，用法为： <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-type">char</span> buffer[<span class="hljs-number">200</span>];<br><span class="hljs-type">int</span>* p1;<br>p1 = <span class="hljs-built_in">new</span> (buffer) <span class="hljs-type">int</span>[<span class="hljs-number">20</span>];<br></code></pre></td></tr></table></figure></li>
+</ul>
+</li>
 </ol>
-
+<h2 id="9-3-名称空间"><a href="#9-3-名称空间" class="headerlink" title="9.3 名称空间"></a>9.3 名称空间</h2>
                 
               </div>
             
@@ -418,8 +358,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>“C++ Primer Plus” 第八章 函数探幽</div>
-      <div>https://yigefanqie-beiyi.github.io/2025/01/19/“C++ Primer Plus” 第八章/</div>
+      <div>“C++ Primer Plus” 第九章 内存模型和名称空间</div>
+      <div>https://yigefanqie-beiyi.github.io/2025/01/20/“C++ Primer Plus” 第九章/</div>
     </div>
     <div class="license-meta">
       
@@ -431,7 +371,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年1月19日</div>
+          <div>2025年1月20日</div>
         </div>
       
       
@@ -463,18 +403,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2025/01/20/%E2%80%9CC++%20Primer%20Plus%E2%80%9D%20%E7%AC%AC%E4%B9%9D%E7%AB%A0/" title="“C++ Primer Plus” 第九章 内存模型和名称空间">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">“C++ Primer Plus” 第九章 内存模型和名称空间</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2025/01/15/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E5%AE%8C%E7%BB%93/" title="“从零搭建操作系统” 完结">
-                        <span class="hidden-mobile">“从零搭建操作系统” 完结</span>
+                      <a href="/2025/01/19/%E2%80%9CC++%20Primer%20Plus%E2%80%9D%20%E7%AC%AC%E5%85%AB%E7%AB%A0/" title="“C++ Primer Plus” 第八章 函数探幽">
+                        <span class="hidden-mobile">“C++ Primer Plus” 第八章 函数探幽</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
