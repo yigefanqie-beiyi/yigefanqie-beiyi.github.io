@@ -27,7 +27,7 @@
 <meta property="og:description" content="运算符重载是一种形式的c++多态 11.1 运算符重载例如，对于两个数组元素相加，一般只能通过： 123for(int i &#x3D; 0; i &lt; size; i++)&#123;    int a[i] &#x3D; b[i] + c[i];&#125; 但是在c++中，可以通过设计一个类表示数组，并重载+运算符，便可以有： 1classname a &#x3D; b + c;  重载运算符，需使用被称为运算符函数">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-01-23T07:09:16.000Z">
-<meta property="article:modified_time" content="2025-01-23T09:02:52.928Z">
+<meta property="article:modified_time" content="2025-01-24T08:03:47.651Z">
 <meta property="article:author" content="Bei">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -222,7 +222,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.7k 字
+          2.1k 字
         
       </span>
     
@@ -233,7 +233,7 @@
         
         
         
-          15 分钟
+          18 分钟
         
       </span>
     
@@ -350,6 +350,14 @@
 <p>第一次看的时候不理解，其实可以这么去记：</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c++">Time a;<br><span class="hljs-comment">//对于类内定义的运算符重载函数</span><br><span class="hljs-type">void</span> <span class="hljs-keyword">operator</span>&lt;&lt;(ostream&amp; a);<br><span class="hljs-comment">//执行时</span><br>a &lt;&lt; cout;  <span class="hljs-comment">//相当于a.operator&lt;&lt;(cout);</span><br><br><span class="hljs-comment">//对于类外定义的友元运算符重载函数</span><br><span class="hljs-type">void</span> <span class="hljs-keyword">operator</span>&lt;&lt;(ostream&amp; a, <span class="hljs-type">const</span> Time&amp; t);<br><span class="hljs-comment">//执行时</span><br>cout &lt;&lt; a;  <span class="hljs-comment">//相当于operator&lt;&lt;(cout, a)，即运算符左边默认对应函数第一个参数，右边默认对应函数第二个参数</span><br></code></pre></td></tr></table></figure>
 
+<h2 id="11-4-类的自动转换和强制类型转换"><a href="#11-4-类的自动转换和强制类型转换" class="headerlink" title="11.4 类的自动转换和强制类型转换"></a>11.4 类的自动转换和强制类型转换</h2><p>直接用代码介绍概念：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-comment">//自动转换</span><br><span class="hljs-type">long</span> count = <span class="hljs-number">8</span>;     <span class="hljs-comment">//将int类型的8自动转换为long类型的8</span><br><span class="hljs-type">double</span> time = <span class="hljs-number">11</span>;   <span class="hljs-comment">//将int类型的11自动转换为double类型的11</span><br><span class="hljs-type">int</span> side = <span class="hljs-number">3.13</span>;    <span class="hljs-comment">//将double类型的3.13自动转换为int类型，舍去精度变为3</span><br><br><span class="hljs-comment">//强制类型转换</span><br><span class="hljs-type">int</span>* p = <span class="hljs-number">10</span>;    <span class="hljs-comment">//不合法，不允许将int类型10自动转换为指针</span><br><span class="hljs-type">int</span>* p = (<span class="hljs-type">int</span>*) <span class="hljs-number">10</span>;     <span class="hljs-comment">//合法，利用强制转换，将int类型的10转换为以10为地址</span><br></code></pre></td></tr></table></figure>
+
+<p>对于类而言，也可以用强制类型转换</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-comment">//假设有一个类叫做Stonewt</span><br><span class="hljs-comment">//类的构造函数为</span><br>Stonewt::<span class="hljs-built_in">Stonewt</span>(<span class="hljs-type">int</span> weight);<br><br><span class="hljs-comment">//可以利用构造函数创建一个类对象</span><br><span class="hljs-function">Stonewt <span class="hljs-title">test1</span><span class="hljs-params">(<span class="hljs-number">5</span>)</span></span>;   <br><span class="hljs-comment">//也可以利用类型转换</span><br>Stonewt test2;<br>test2 = <span class="hljs-number">5</span>;      <span class="hljs-comment">//这样相当于是隐式的类型转换，但这样容易出问题</span><br>test2 = (Stonewt) <span class="hljs-number">5</span>;    <span class="hljs-comment">//也可以显式转换</span><br><br><span class="hljs-comment">//如果类的构造函数为</span><br>Stonewt::<span class="hljs-built_in">Stonewt</span>(<span class="hljs-type">int</span> weight, <span class="hljs-type">int</span> num);<br><span class="hljs-comment">//那么将不能使用类型转换，除非把后面的参数都设置了默认值</span><br><br></code></pre></td></tr></table></figure>
+
+<p>只有接受一个参数的构造函数才能作为转换函数</p>
+<p>类的隐式自动转换容易出问题，因此c++新增了关键字explicit，用于关闭这种自动特性，也就是说可以声明构造函数为<br><code>explicit Stonewt::Stonewt(int weight);</code><br>这将关闭上述的隐式转换，即不允许<br><code>test2 = 5; </code><br>但还允许显示转换，即强制类型转换<br><code>test2 = (Stonewt) 5;  </code></p>
 
                 
               </div>
