@@ -227,6 +227,60 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
+        <a href="/2025/01/08/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E5%8D%81%E4%B8%89%E7%AB%A0/" target="_self">
+          “从零搭建操作系统” 第十三章 硬盘驱动
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/01/08/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E5%8D%81%E4%B8%89%E7%AB%A0/" target="_self">
+        <div>
+          13.1 硬盘及分区表我们在加载最开始的boot.bin的时候，就已经创建了一个硬盘，用于当做系统的启动盘，此后我们的代码都是通过dd命令复制到这个硬盘上，从而正式引导操作系统的启动。 BIOS会在内存的物理地址0x475处存储主机上安装的硬盘数量，在目前的系统上利用bochs执行xp/b 0x475可以看到硬盘数量为0x01 利用bochs下的bximage命令，创建一个新的硬盘共80MB，CH
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-01-08 10:00" pubdate>
+              2025-01-08
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="category-chain-item">从零搭建操作系统</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
         <a href="/2025/01/06/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E5%8D%81%E4%BA%8C%E7%AB%A0/" target="_self">
           “从零搭建操作系统” 第十二章 系统调用和堆内存管理
         </a>
@@ -677,60 +731,6 @@
             <i class="iconfont icon-date"></i>
             <time datetime="2024-12-25 16:25" pubdate>
               2024-12-25
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="category-chain-item">从零搭建操作系统</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h2 class="index-header">
-        
-        <a href="/2024/12/23/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E4%BA%94%E7%AB%A0/" target="_self">
-          “从零搭建操作系统” 第五章 保护模式进阶
-        </a>
-      </h2>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/2024/12/23/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E4%BA%94%E7%AB%A0/" target="_self">
-        <div>
-          5.1 获取物理内存容量在linux中有多种获取容量的方法，如果其中一种方法失败，就会尝试调用别的方法，很多都是通过BIOS中断进行检测，但BIOS中断是实模式下的方法，因此只能在进入保护模式前调用，所以需要在进入保护模式前检测完内存容量。具体检测方式分为三种，具体详情可参考这里 在进入保护模式前补充代码： 123456789101112131415161718192021222324252627
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2024-12-23 16:56" pubdate>
-              2024-12-23
             </time>
           </div>
         
