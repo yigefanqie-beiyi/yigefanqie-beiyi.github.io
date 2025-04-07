@@ -27,7 +27,7 @@
 <meta property="og:description" content="base1 : 不同位置的const通过下述代码进行解析，从访问权限和内存地址角度出发 1234567891011121314151617int main()&#123;    const int a &#x3D; 10;    int b &#x3D; a;  &#x2F;&#x2F;通过，a相当于是在常量区的某一个位置的10，允许将其拷贝给b    const int *const p &#x3D; new int(10); &#x2F;&#x2F;p是一个具有">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-04-03T06:59:28.000Z">
-<meta property="article:modified_time" content="2025-04-03T08:57:18.030Z">
+<meta property="article:modified_time" content="2025-04-04T08:51:39.758Z">
 <meta property="article:author" content="Bei">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -222,7 +222,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1k 字
+          1.5k 字
         
       </span>
     
@@ -233,7 +233,7 @@
         
         
         
-          9 分钟
+          13 分钟
         
       </span>
     
@@ -298,12 +298,50 @@
 <p>上述代码会发生一次拷贝构造，两次移动构造</p>
 <p><strong>5. 函数指针</strong></p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function"><span class="hljs-keyword">typedef</span> <span class="hljs-title">bool</span> <span class="hljs-params">(*funPtr)</span> <span class="hljs-params">(<span class="hljs-type">int</span>, <span class="hljs-type">int</span>)</span>   <span class="hljs-comment">//funPtr是函数指针，输入参数是两个int，返回类型是bool</span></span><br><span class="hljs-function"><span class="hljs-comment">//等价于</span></span><br><span class="hljs-function"><span class="hljs-keyword">using</span> funPtr </span>= <span class="hljs-built_in">bool</span> (*) (<span class="hljs-type">int</span>, <span class="hljs-type">int</span>)<br></code></pre></td></tr></table></figure>
+
+<h2 id="条款1：理解模板类型的推导"><a href="#条款1：理解模板类型的推导" class="headerlink" title="条款1：理解模板类型的推导"></a>条款1：理解模板类型的推导</h2><h2 id="条款7：区别使用-和-创建对象"><a href="#条款7：区别使用-和-创建对象" class="headerlink" title="条款7：区别使用()和{}创建对象"></a>条款7：区别使用()和{}创建对象</h2><p>先看传统()初始化的使用会带来的问题</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">A</span>&#123;<br>    <span class="hljs-comment">//有自己的带参构造函数</span><br>    <span class="hljs-comment">//有自己的拷贝构造函数</span><br>&#125;;<br><br>A a = <span class="hljs-number">10</span>;   <span class="hljs-comment">//只能接收一个参数，同时会发生一次额外的拷贝</span><br>            <span class="hljs-comment">//这里会把10先进行一个隐式转换成类A对象，然后执行一次拷贝构造，浪费空间时间</span><br><br><span class="hljs-function">A <span class="hljs-title">a</span><span class="hljs-params">(<span class="hljs-number">10</span>)</span></span>;    <span class="hljs-comment">//这样子构造不会发生额外的拷贝，但是如果是作为函数参数或者返回值时，还是会发生拷贝</span><br><span class="hljs-comment">//例如</span><br><span class="hljs-function">A <span class="hljs-title">func</span><span class="hljs-params">()</span></span>&#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-built_in">A</span>(<span class="hljs-number">10</span>);   <span class="hljs-comment">//在没开启返回值优化时，会创建一个临时变量 A tmp = A(10)，这里发生拷贝</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>出现问题：</p>
+<ul>
+<li>只能接收一个参数，同时会发生一次额外的拷贝</li>
+<li>可能额外发生拷贝，或者有些类不允许拷贝的话还会报错</li>
+<li>作为函数参数或者返回值时，可能还是会发生拷贝</li>
+</ul>
+<p>如果使用{}列表初始化，可以完美解决上述问题</p>
+<ul>
+<li>允许接收多个参数<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c++">A a = &#123;<span class="hljs-number">1</span>, <span class="hljs-string">&quot;aaa&quot;</span>, <span class="hljs-number">2.0</span>&#125;;<br></code></pre></td></tr></table></figure></li>
+<li>不允许缩窄转换<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-comment">//假设类A的构造函数传入参数是两个int</span><br>A a = &#123;<span class="hljs-number">1</span>, <span class="hljs-number">2.0</span>&#125;; <span class="hljs-comment">//报错！不允许将double转为int</span><br></code></pre></td></tr></table></figure></li>
+<li>大大简化了聚合类的初始化，聚合类是指没有构造函数的类，且没有私有成员</li>
+<li>不会出现C++令人头疼的解析问题<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-comment">//假设我们想利用一个函数returnA返回的值进行初始化</span><br>A a = <span class="hljs-built_in">returnA</span>();    <span class="hljs-comment">//通过</span><br><span class="hljs-function">A <span class="hljs-title">a</span><span class="hljs-params">(returnA())</span></span>;     <span class="hljs-comment">//也能通过，但是这不是初始化，c++会把它识别为函数声明，一个输入参数为函数指针，返回类型为A的函数声明</span><br><br>A a&#123;<span class="hljs-built_in">returnA</span>()&#125;;     <span class="hljs-comment">//列表初始化就不会出现这个问题</span><br></code></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="条款2：理解auto类型推导（与模板推导有很多重叠的地方）"><a href="#条款2：理解auto类型推导（与模板推导有很多重叠的地方）" class="headerlink" title="条款2：理解auto类型推导（与模板推导有很多重叠的地方）"></a>条款2：理解auto类型推导（与模板推导有很多重叠的地方）</h2>
                 
               </div>
             
             <hr/>
             <div>
               <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/C/" class="category-chain-item">C++</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
   
   
 </div>
