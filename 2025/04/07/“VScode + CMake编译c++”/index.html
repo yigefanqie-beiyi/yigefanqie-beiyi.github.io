@@ -19,25 +19,25 @@
   <meta name="author" content="Bei">
   <meta name="keywords" content="">
   
-    <meta name="description" content="��������vscode����c&#x2F;c++�����һ��ѽ̳̣����Ҿ���̫���ӣ����￪ʼѧϰ����vscode+cmake����c++���̵ı�д��ͬʱ�����Լ���cmake���˽� ǰ�ڱر���һЩ���� vscode cmake�����аٶ����أ� vscode��չ����C++�����ף�CMake��CMake Tools  ���">
+    <meta name="description" content="网上利用vscode进行c&#x2F;c++编程有一大堆教程，但我觉得太复杂，这里开始学习利用vscode+cmake进行c++工程的编写，同时加深自己对cmake的了解 前期必备的一些工具 vscode cmake（自行百度下载） vscode扩展包括C++三件套，CMake，CMake Tools  举例利用cmake创建一个新的工程 创建一个新的文件夹CmakeStudy  利用CMake:">
 <meta property="og:type" content="article">
-<meta property="og:title" content="��VScode + CMake�� һ��CMake������">
-<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2025/04/07/%E2%80%9CVScode%20+%20CMake%E2%80%9D%E7%AC%AC%E4%B8%80%E7%AB%A0/index.html">
+<meta property="og:title" content="VScode + CMake 编译C++">
+<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2025/04/07/%E2%80%9CVScode%20+%20CMake%E7%BC%96%E8%AF%91c++%E2%80%9D/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="��������vscode����c&#x2F;c++�����һ��ѽ̳̣����Ҿ���̫���ӣ����￪ʼѧϰ����vscode+cmake����c++���̵ı�д��ͬʱ�����Լ���cmake���˽� ǰ�ڱر���һЩ���� vscode cmake�����аٶ����أ� vscode��չ����C++�����ף�CMake��CMake Tools  ���">
+<meta property="og:description" content="网上利用vscode进行c&#x2F;c++编程有一大堆教程，但我觉得太复杂，这里开始学习利用vscode+cmake进行c++工程的编写，同时加深自己对cmake的了解 前期必备的一些工具 vscode cmake（自行百度下载） vscode扩展包括C++三件套，CMake，CMake Tools  举例利用cmake创建一个新的工程 创建一个新的文件夹CmakeStudy  利用CMake:">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/cmake1.png">
 <meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/cmake2.png">
 <meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/cmake3.png">
 <meta property="article:published_time" content="2025-04-07T13:32:02.000Z">
-<meta property="article:modified_time" content="2025-04-07T13:57:37.296Z">
+<meta property="article:modified_time" content="2025-04-08T09:05:53.411Z">
 <meta property="article:author" content="Bei">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://yigefanqie-beiyi.github.io/img/cmake1.png">
   
   
   
-  <title>��VScode + CMake�� һ��CMake������ - Hexo</title>
+  <title>VScode + CMake 编译C++ - Hexo</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -203,7 +203,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="��VScode + CMake�� һ��CMake������"></span>
+            <span id="subtitle" data-typed-text="VScode + CMake 编译C++"></span>
           
         </div>
 
@@ -226,7 +226,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          107 字
+          313 字
         
       </span>
     
@@ -237,7 +237,7 @@
         
         
         
-          1 分钟
+          3 分钟
         
       </span>
     
@@ -274,37 +274,39 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">��VScode + CMake�� һ��CMake������</h1>
+            <h1 id="seo-header">VScode + CMake 编译C++</h1>
             
             
               <div class="markdown-body">
                 
-                <p>��������vscode����c&#x2F;c++�����һ��ѽ̳̣����Ҿ���̫���ӣ����￪ʼѧϰ����vscode+cmake����c++���̵ı�д��ͬʱ�����Լ���cmake���˽�</p>
-<h2 id="j�ڱر���һЩ����"><a href="#j�ڱر���һЩ����" class="headerlink" title="ǰ�ڱر���һЩ����"></a>ǰ�ڱر���һЩ����</h2><ul>
+                <p>网上利用vscode进行c&#x2F;c++编程有一大堆教程，但我觉得太复杂，这里开始学习利用vscode+cmake进行c++工程的编写，同时加深自己对cmake的了解</p>
+<h2 id="前期必备的一些工具"><a href="#前期必备的一些工具" class="headerlink" title="前期必备的一些工具"></a>前期必备的一些工具</h2><ul>
 <li>vscode</li>
-<li>cmake�����аٶ����أ�</li>
-<li>vscode��չ����C++�����ף�CMake��CMake Tools</li>
+<li>cmake（自行百度下载）</li>
+<li>vscode扩展包括C++三件套，CMake，CMake Tools</li>
 </ul>
-<h2 id="��������cmake����һ���µL���"><a href="#��������cmake����һ���µL���" class="headerlink" title="��������cmake����һ���µĹ���"></a>��������cmake����һ���µĹ���</h2><ol>
-<li><p>����һ���µ��ļ���CmakeStudy</p>
+<h2 id="举例利用cmake创建一个新的工程"><a href="#举例利用cmake创建一个新的工程" class="headerlink" title="举例利用cmake创建一个新的工程"></a>举例利用cmake创建一个新的工程</h2><ol>
+<li><p>创建一个新的文件夹CmakeStudy</p>
 </li>
-<li><p>����CMake:Quick Start�����һ��CMake����project1��ѡ���Լ����Ժ��ʵı�������������£�<br><img src="/../img/cmake1.png" srcset="/img/loading.gif" lazyload></p>
+<li><p>利用CMake:Quick Start命令创建一个CMake工程project1，选择自己电脑合适的编译器，结果如下：<br><img src="/../img/cmake1.png" srcset="/img/loading.gif" lazyload></p>
 </li>
-<li><p>�������½�������ť���Էֱ���б�������build��debug��������<br><img src="/../img/cmake2.png" srcset="/img/loading.gif" lazyload></p>
+<li><p>利用左下角三个按钮可以分别进行编译链接build，debug，和运行<br><img src="/../img/cmake2.png" srcset="/img/loading.gif" lazyload></p>
 </li>
-<li><p>��ʱ�ܵ�CMakeLists���£�</p>
+<li><p>此时总的CMakeLists如下：</p>
 <figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs cmake"><span class="hljs-keyword">cmake_minimum_required</span>(VERSION <span class="hljs-number">3.10</span>.<span class="hljs-number">0</span>) <br><span class="hljs-keyword">project</span>(project1 VERSION <span class="hljs-number">0.1</span>.<span class="hljs-number">0</span> LANGUAGES C CXX)<br><br><span class="hljs-keyword">add_executable</span>(project1 main.cpp)<br><br><span class="hljs-keyword">include</span>(CTest)<br><span class="hljs-keyword">enable_testing</span>()<br><br><span class="hljs-keyword">set</span>(CPACK_PROJECT_NAME <span class="hljs-variable">$&#123;PROJECT_NAME&#125;</span>)<br><span class="hljs-keyword">set</span>(CPACK_PROJECT_VERSION <span class="hljs-variable">$&#123;PROJECT_VERSION&#125;</span>)<br><span class="hljs-keyword">include</span>(CPack)<br><br></code></pre></td></tr></table></figure>
 </li>
-<li><p>����һ���µ�ͬ���ļ���lesson1����������add.cpp add.h main.cpp�����ļ���ִ��һ���򵥵�����add���������ӵĹ���</p>
+<li><p>创建一个新的同级文件夹lesson1，里面添加add.cpp add.h main.cpp三个文件，执行一个简单的利用add函数完成相加的功能</p>
 </li>
-<li><p>��lesson1Ŀ¼�´���һ���µ�CMakeLists.txt</p>
+<li><p>在lesson1目录下创建一个新的CMakeLists.txt</p>
 <figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cmake"><span class="hljs-keyword">add_executable</span>(lesson1 main.cpp add.cpp)<br></code></pre></td></tr></table></figure>
 </li>
-<li><p>���������̵�CMakeLists�е����ݸ�Ϊ</p>
-<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs cmake"><span class="hljs-keyword">cmake_minimum_required</span>(VERSION <span class="hljs-number">3.10</span>.<span class="hljs-number">0</span>) <br><span class="hljs-keyword">project</span>(project1 VERSION <span class="hljs-number">0.1</span>.<span class="hljs-number">0</span> LANGUAGES C CXX)<br><br><span class="hljs-keyword">add_subdirectory</span>(lesson1)       //�޸�����Ϊ������Ŀ¼<br><br><span class="hljs-keyword">include</span>(CTest)<br><span class="hljs-keyword">enable_testing</span>()<br><br><span class="hljs-keyword">set</span>(CPACK_PROJECT_NAME <span class="hljs-variable">$&#123;PROJECT_NAME&#125;</span>)<br><span class="hljs-keyword">set</span>(CPACK_PROJECT_VERSION <span class="hljs-variable">$&#123;PROJECT_VERSION&#125;</span>)<br><span class="hljs-keyword">include</span>(CPack)<br></code></pre></td></tr></table></figure>
+<li><p>将整个工程的CMakeLists中的内容改为</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs cmake"><span class="hljs-keyword">cmake_minimum_required</span>(VERSION <span class="hljs-number">3.10</span>.<span class="hljs-number">0</span>) <br><span class="hljs-keyword">project</span>(project1 VERSION <span class="hljs-number">0.1</span>.<span class="hljs-number">0</span> LANGUAGES C CXX)<br><br><span class="hljs-keyword">add_subdirectory</span>(lesson1)       //修改这里为添加子目录<br><br><span class="hljs-keyword">include</span>(CTest)<br><span class="hljs-keyword">enable_testing</span>()<br><br><span class="hljs-keyword">set</span>(CPACK_PROJECT_NAME <span class="hljs-variable">$&#123;PROJECT_NAME&#125;</span>)<br><span class="hljs-keyword">set</span>(CPACK_PROJECT_VERSION <span class="hljs-variable">$&#123;PROJECT_VERSION&#125;</span>)<br><span class="hljs-keyword">include</span>(CPack)<br></code></pre></td></tr></table></figure>
 </li>
-<li><p>���룬���У�<br><img src="/../img/cmake3.png" srcset="/img/loading.gif" lazyload></p>
+<li><p>编译，运行：<br><img src="/../img/cmake3.png" srcset="/img/loading.gif" lazyload></p>
 </li>
+<li><p>可以在最外层的工程CMakeLists中加入语句从而支持c++11</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cmake"><span class="hljs-keyword">set</span>(CMAKE_CXX_STANDARD <span class="hljs-number">11</span>)<br><span class="hljs-keyword">set</span>(CMAKE_CXX_STANDARD_REQUIRED <span class="hljs-keyword">True</span>)<br></code></pre></td></tr></table></figure></li>
 </ol>
 
                 
@@ -323,8 +325,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>��VScode + CMake�� һ��CMake������</div>
-      <div>https://yigefanqie-beiyi.github.io/2025/04/07/“VScode + CMake”第一章/</div>
+      <div>VScode + CMake 编译C++</div>
+      <div>https://yigefanqie-beiyi.github.io/2025/04/07/“VScode + CMake编译c++”/</div>
     </div>
     <div class="license-meta">
       
@@ -367,6 +369,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2025/04/08/%E2%80%9CTinyWebserver%E9%A1%B9%E7%9B%AE%E5%AD%A6%E4%B9%A0%E2%80%9D%20%E4%B8%80/" title="“TinyWebserver项目学习” 第一章 环境部署">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">“TinyWebserver项目学习” 第一章 环境部署</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">

@@ -19,21 +19,26 @@
   <meta name="author" content="Bei">
   <meta name="keywords" content="">
   
-    <meta name="description" content="2024.12.21跟随《操作系统真象还原》这本书学习，共15章，目前已学完12章，随着对操作系统的深入感觉知识体系过于混乱，决定从头梳理前12章的内容，并记录在blog。 后三章分别是编写硬盘驱动程序，文件系统，系统交互（fork、shell、pipe等），逐渐偏向用户开发而不是内核开发，先吃透内核开发免得和用户开发混在一起。 冬至快乐！ 2024.12.23前三章暂时不细究，细究的话太多硬件知">
+    <meta name="description" content="这是一个非常常见的项目，我想通过这个项目加深自己c++、网络通信这一块的基础，在正式学习之前，先花点时间直接把源码下载下来并完成部署，跑一遍看看整体情况.同时，因为自己已经有c++，网络通信，操作系统，计网等基础，所以这次不想借助别人已有的教程，更多的尽量只依靠自己和ai去完成这个项目的学习。 1.基础环境与源码准备虚拟机的Ubuntu作为服务端，同时打开浏览器作为客户端 创建一个文件夹存放工程，">
 <meta property="og:type" content="article">
-<meta property="og:title" content="“从零搭建操作系统” 前言">
-<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2024/12/21/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%20%E2%80%9D%20%E5%89%8D%E8%A8%80/index.html">
+<meta property="og:title" content="“TinyWebserver项目学习” 第一章 环境部署">
+<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2025/04/08/%E2%80%9CTinyWebserver%E9%A1%B9%E7%9B%AE%E5%AD%A6%E4%B9%A0%E2%80%9D%20%E4%B8%80/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="2024.12.21跟随《操作系统真象还原》这本书学习，共15章，目前已学完12章，随着对操作系统的深入感觉知识体系过于混乱，决定从头梳理前12章的内容，并记录在blog。 后三章分别是编写硬盘驱动程序，文件系统，系统交互（fork、shell、pipe等），逐渐偏向用户开发而不是内核开发，先吃透内核开发免得和用户开发混在一起。 冬至快乐！ 2024.12.23前三章暂时不细究，细究的话太多硬件知">
+<meta property="og:description" content="这是一个非常常见的项目，我想通过这个项目加深自己c++、网络通信这一块的基础，在正式学习之前，先花点时间直接把源码下载下来并完成部署，跑一遍看看整体情况.同时，因为自己已经有c++，网络通信，操作系统，计网等基础，所以这次不想借助别人已有的教程，更多的尽量只依靠自己和ai去完成这个项目的学习。 1.基础环境与源码准备虚拟机的Ubuntu作为服务端，同时打开浏览器作为客户端 创建一个文件夹存放工程，">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2024-12-21T09:02:50.000Z">
-<meta property="article:modified_time" content="2025-01-15T12:19:53.461Z">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/webserver1.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/webserver.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/webserver3.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/webserver4.png">
+<meta property="article:published_time" content="2025-04-08T09:10:00.000Z">
+<meta property="article:modified_time" content="2025-04-08T13:39:00.525Z">
 <meta property="article:author" content="Bei">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://yigefanqie-beiyi.github.io/img/webserver1.png">
   
   
   
-  <title>“从零搭建操作系统” 前言 - Hexo</title>
+  <title>“TinyWebserver项目学习” 第一章 环境部署 - Hexo</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -199,7 +204,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="“从零搭建操作系统” 前言"></span>
+            <span id="subtitle" data-typed-text="“TinyWebserver项目学习” 第一章 环境部署"></span>
           
         </div>
 
@@ -210,8 +215,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-12-21 17:02" pubdate>
-          2024年12月21日 下午
+        <time datetime="2025-04-08 17:10" pubdate>
+          2025年4月8日 下午
         </time>
       </span>
     
@@ -222,7 +227,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.1k 字
+          613 字
         
       </span>
     
@@ -233,7 +238,7 @@
         
         
         
-          10 分钟
+          6 分钟
         
       </span>
     
@@ -270,33 +275,47 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">“从零搭建操作系统” 前言</h1>
+            <h1 id="seo-header">“TinyWebserver项目学习” 第一章 环境部署</h1>
             
             
               <div class="markdown-body">
                 
-                <h3 id="2024-12-21"><a href="#2024-12-21" class="headerlink" title="2024.12.21"></a>2024.12.21</h3><p>跟随《操作系统真象还原》这本书学习，共15章，目前已学完12章，随着对操作系统的深入感觉知识体系过于混乱，决定从头梳理前12章的内容，并记录在blog。</p>
-<p>后三章分别是编写硬盘驱动程序，文件系统，系统交互（fork、shell、pipe等），逐渐偏向用户开发而不是内核开发，先吃透内核开发免得和用户开发混在一起。</p>
-<p>冬至快乐！</p>
-<h3 id="2024-12-23"><a href="#2024-12-23" class="headerlink" title="2024.12.23"></a>2024.12.23</h3><p>前三章暂时不细究，细究的话太多硬件知识基础知识，有点像八股，这次复习重点偏向内核。</p>
-<p>与内核相关的，前三章整体的作用是BIOS-&gt;MBR-&gt;Loader</p>
-<p>需要注意，有些知识如汇编的知识，section，硬盘结构，处理器架构等知识也应该很重要，以后要回来复习。</p>
-<p>第四章跳过了处理器微架构和流水线的知识，以后再补。</p>
-<h3 id="2024-12-25"><a href="#2024-12-25" class="headerlink" title="2024.12.25"></a>2024.12.25</h3><p>完成第五章的复习，跳过了ELF格式的解码以及一些特权级、调用门的介绍<br>要出差，无语。</p>
-<p>第六章没什么特别难的，主要是实现打印函数操控显卡，以及内联汇编的一些知识</p>
-<p>明天再写第七章吧，中断还是比较重要的</p>
-<h3 id="2024-12-26"><a href="#2024-12-26" class="headerlink" title="2024.12.26"></a>2024.12.26</h3><p>完成第七章中断的复习，对8259A和8253两个芯片的复习没有很深，因为感觉这种芯片的使用记不住，只能现用现查<br>大概总结了中断的逻辑，今天就到这<br>明天出差no</p>
-<h3 id="2025-1-2"><a href="#2025-1-2" class="headerlink" title="2025.1.2"></a>2025.1.2</h3><p>新年好<br>出差、跨年回来，重新着手完成了第八章的复习，这一章重点在于后面的内存管理，主要是对各种池如物理内存池虚拟内存池等的应用，但目前只完成了内核内存的分配函数，用户内存的分配比较复杂，以后讨论</p>
-<h3 id="2025-1-3"><a href="#2025-1-3" class="headerlink" title="2025.1.3"></a>2025.1.3</h3><p>完成第九章的复习，多线程的切换对不同栈的设定，以及上下文的保护和恢复真的很巧妙，每次看都会觉得操作系统设计的精密</p>
-<h3 id="2025-1-5"><a href="#2025-1-5" class="headerlink" title="2025.1.5"></a>2025.1.5</h3><p>完成第十章和第十一章的复习<br>第十章就是锁比较重点，主要需要理解信号量；键盘驱动大致看看就行，但是环形缓冲区涉及生产者-消费者原理，可以留意一下。<br>第十一章就很难，用户进程的实现，感觉好像还是有一些地方没搞懂，夸张，实现内核线程已经很麻烦了，结果用户进程更麻烦，不一步一步推导根本看不懂</p>
-<h3 id="2025-1-6"><a href="#2025-1-6" class="headerlink" title="2025.1.6"></a>2025.1.6</h3><p>先再次总结了一下第十一章，进一步地，考虑有三个任务，分别是内核线程A，用户进程B，内核线程C，调度的时候是栈是如何切换的，就这一个问题捋清楚都花了将近两个小时，现在是大致都清楚了，但细节太多，估计以后还需要再复习巩固。</p>
-<h3 id="2025-1-7"><a href="#2025-1-7" class="headerlink" title="2025.1.7"></a>2025.1.7</h3><p>完成第12章的复习，这一章主要是前面部分对系统调用的实现进行了了解，同时完善了堆内存管理，实现了对小内存块的动态分配与释放，涉及到了新的概念arena和内存块</p>
-<h3 id="2025-1-8"><a href="#2025-1-8" class="headerlink" title="2025.1.8"></a>2025.1.8</h3><p>今天开始第13章的学习，接下来只剩下三章了，学习进度可能会放缓，每天学一点，需要把额外的时间拿来刷题，看八股和学c++</p>
-<h3 id="2025-1-9"><a href="#2025-1-9" class="headerlink" title="2025.1.9"></a>2025.1.9</h3><p>小学了一下硬盘驱动的知识，开始写硬盘驱动的代码</p>
-<h3 id="2025-1-10"><a href="#2025-1-10" class="headerlink" title="2025.1.10"></a>2025.1.10</h3><p>发现硬盘驱动代码有点复杂，这属于linux驱动的方面，但我想先把内核的逻辑学完，所以先跑通硬盘驱动就好，具体代码的逻辑看看能不能跳过，先去看文件系统，实在不行再回头看硬盘驱动代码</p>
-<p>下午开始第十四章 文件系统的学习，这一章工作量巨大，估计要持续一段时间了</p>
-<h3 id="2025-1-13"><a href="#2025-1-13" class="headerlink" title="2025.1.13"></a>2025.1.13</h3><p>不行，文件系统工作量也太大了，选择先过一遍代码并把每个功能都跑通，代码细节先忽略</p>
-<h3 id="2025-1-15"><a href="#2025-1-15" class="headerlink" title="2025.1.15"></a>2025.1.15</h3><p>赶在回家前爆肝看完了这本书，有点可惜的是后面的exec，pipe等几个函数没能实现，学艺不精吧，以后再实现了</p>
+                <p>这是一个非常常见的项目，我想通过这个项目加深自己c++、网络通信这一块的基础，在正式学习之前，先花点时间直接把源码下载下来并完成部署，跑一遍看看整体情况.<br>同时，因为自己已经有c++，网络通信，操作系统，计网等基础，所以这次不想借助别人已有的教程，更多的尽量只依靠自己和ai去完成这个项目的学习。</p>
+<p><strong>1.基础环境与源码准备</strong><br>虚拟机的Ubuntu作为服务端，同时打开浏览器作为客户端</p>
+<p>创建一个文件夹存放工程，终端执行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">git <span class="hljs-built_in">clone</span> https://github.com/qinguoyi/TinyWebServer.git<br></code></pre></td></tr></table></figure>
+<p>下载源码</p>
+<p><strong>2.安装mysql</strong><br>执行安装mysql-server</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> apt-get install mysql-server<br></code></pre></td></tr></table></figure>
+<p>顺便再执行安装mysql-client</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> apt-get install mysql-client<br></code></pre></td></tr></table></figure>
+
+<p>检查mysql状态</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">systemctl status mysql.service<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/webserver1.png" srcset="/img/loading.gif" lazyload></p>
+<p><strong>3.登录mysql并新建数据库</strong><br>以root登录mysql</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> mysql -u root -p<br></code></pre></td></tr></table></figure>
+
+<p>根据原作者提供的readme创建数据库</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-operator">/</span><span class="hljs-operator">/</span> 建立mydb库<br><span class="hljs-keyword">create</span> database mydb;<br><span class="hljs-operator">/</span><span class="hljs-operator">/</span> 创建<span class="hljs-keyword">user</span>表<br>USE mydb;<br><span class="hljs-keyword">CREATE TABLE</span> <span class="hljs-keyword">user</span>(<br>    username <span class="hljs-type">char</span>(<span class="hljs-number">50</span>) <span class="hljs-keyword">NULL</span>,<br>    passwd <span class="hljs-type">char</span>(<span class="hljs-number">50</span>) <span class="hljs-keyword">NULL</span><br>)ENGINE<span class="hljs-operator">=</span>InnoDB;<br><span class="hljs-operator">/</span><span class="hljs-operator">/</span> 添加数据<br><span class="hljs-keyword">INSERT INTO</span> <span class="hljs-keyword">user</span>(username, passwd) <span class="hljs-keyword">VALUES</span>(<span class="hljs-string">&#x27;name&#x27;</span>, <span class="hljs-string">&#x27;passwd&#x27;</span>);<br></code></pre></td></tr></table></figure>
+
+<p>可以根据以下命令查看表和表的内容</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">show</span> databases; <span class="hljs-operator">/</span><span class="hljs-operator">/</span>可以查看当前的数据库<br>USE yourdb; <span class="hljs-operator">/</span><span class="hljs-operator">/</span>选择新建的数据库<br><span class="hljs-keyword">select</span> <span class="hljs-operator">*</span><span class="hljs-keyword">from</span> <span class="hljs-keyword">user</span>; <span class="hljs-operator">/</span><span class="hljs-operator">/</span>查看用户<br></code></pre></td></tr></table></figure>
+
+<p><strong>4.修改main.cpp的代码</strong><br>根据原作者的readme，打开main.cpp修改与数据库有关的信息，改为自己创建的数据库</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">char</span> *argv[])</span></span><br><span class="hljs-function"></span>&#123;<br>    ...<br>    <span class="hljs-comment">//需要修改的数据库信息,登录名,密码,库名</span><br>    string user = <span class="hljs-string">&quot;root&quot;</span>;<br>    string passwd = <span class="hljs-string">&quot;*********&quot;</span>;<br>    string databasename = <span class="hljs-string">&quot;mydb&quot;</span>;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><strong>5.编译运行</strong><br>cd到webserver目录，执行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">sh ./build.sh<br></code></pre></td></tr></table></figure>
+<p>这行代码用bash脚本执行.sh文件，文件内容很简单，其实就是执行make server语句<br><img src="/../img/webserver.png" srcset="/img/loading.gif" lazyload><br>对应去看makefile文件<br><img src="/../img/webserver3.png" srcset="/img/loading.gif" lazyload></p>
+<p>在这里可能会出现编译失败的问题，尤其是找不到mysql.h这个文件，是因为没有装对应的API，执行下面的命令可以解决</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> apt-get install libmysqlclient-dev<br></code></pre></td></tr></table></figure>
+
+<p>上述顺利完成后，此时应该已经编译得到了server文件，执行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> ./server<br></code></pre></td></tr></table></figure>
+<p>运行后无反应卡住，说明服务端正在运行。</p>
+<p><strong>6.客户端连接</strong><br>直接在另一台电脑，或者本地电脑的浏览器上输入ip:9006即可<br>注意：如果是本机作为客户端，ip要写回环地址127.0.0.1<br><img src="/../img/webserver4.png" srcset="/img/loading.gif" lazyload><br>出现上述页面，说明部署成功，此时可以按照readme上的提示进行一些功能验证以及压测</p>
 
                 
               </div>
@@ -304,27 +323,6 @@
             <hr/>
             <div>
               <div class="post-metas my-3">
-  
-    <div class="post-meta mr-3 d-flex align-items-center">
-      <i class="iconfont icon-category"></i>
-      
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="category-chain-item">从零搭建操作系统</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-    </div>
   
   
 </div>
@@ -335,8 +333,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>“从零搭建操作系统” 前言</div>
-      <div>https://yigefanqie-beiyi.github.io/2024/12/21/“从零搭建操作系统 ” 前言/</div>
+      <div>“TinyWebserver项目学习” 第一章 环境部署</div>
+      <div>https://yigefanqie-beiyi.github.io/2025/04/08/“TinyWebserver项目学习” 一/</div>
     </div>
     <div class="license-meta">
       
@@ -348,7 +346,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2024年12月21日</div>
+          <div>2025年4月8日</div>
         </div>
       
       
@@ -380,15 +378,15 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2024/12/21/%E2%80%9C%E4%BB%8E%E9%9B%B6%E6%90%AD%E5%BB%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E2%80%9D%20%E7%AC%AC%E4%B8%80%E7%AB%A0/" title="“从零搭建操作系统” 第一章 环境部署">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">“从零搭建操作系统” 第一章 环境部署</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
+                    
+                      <a href="/2025/04/07/%E2%80%9CVScode%20+%20CMake%E7%BC%96%E8%AF%91c++%E2%80%9D/" title="VScode + CMake 编译C++">
+                        <span class="hidden-mobile">VScode + CMake 编译C++</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
                     
                   </article>
                 </div>
