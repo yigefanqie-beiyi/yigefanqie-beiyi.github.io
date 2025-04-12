@@ -31,7 +31,7 @@
 <meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/f4655dce9d916c19a687e12797106c76.png">
 <meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/7b0cae74bbf7125b005d886b1e18a8f3.png">
 <meta property="article:published_time" content="2024-12-23T06:27:58.000Z">
-<meta property="article:modified_time" content="2024-12-23T08:45:23.565Z">
+<meta property="article:modified_time" content="2025-04-12T09:30:51.431Z">
 <meta property="article:author" content="Bei">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://yigefanqie-beiyi.github.io/img/803de1573406001061536d589f7fa8b5.png">
@@ -227,7 +227,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.1k 字
+          2.9k 字
         
       </span>
     
@@ -238,7 +238,7 @@
         
         
         
-          18 分钟
+          25 分钟
         
       </span>
     
@@ -337,7 +337,24 @@
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-comment">;----------------------------------------已经打开保护模式了-----------------------------------</span><br><span class="hljs-keyword">jmp</span> <span class="hljs-built_in">dword</span> SELECTOR_CODE:p_mode_start                       <span class="hljs-comment">;刷新流水线</span><br><br>[<span class="hljs-meta">bits</span> <span class="hljs-number">32</span>]<br><span class="hljs-symbol">p_mode_start:</span> <br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ax</span>,SELECTOR_DATA<br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ds</span>,<span class="hljs-built_in">ax</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">es</span>,<span class="hljs-built_in">ax</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ss</span>,<span class="hljs-built_in">ax</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">esp</span>,LOADER_STACK_TOP<br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ax</span>,SELECTOR_VIDEO<br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">gs</span>,<span class="hljs-built_in">ax</span><br></code></pre></td></tr></table></figure>
 
 <p>流水线知识暂不详谈<br>利用<code>[bits 32]</code>告诉编译器已经进入保护模式，接下来的指令都应该用32位<br>进入保护模式后，段寄存器存储的应该是选择子，所以用数据段选择子初始化所有段寄存器，并将gs段寄存器初始化为显存段的段选择子</p>
-<h2 id="4-4-保护模式后，未开启分页前，内存的访问流程"><a href="#4-4-保护模式后，未开启分页前，内存的访问流程" class="headerlink" title="4.4 保护模式后，未开启分页前，内存的访问流程"></a>4.4 保护模式后，未开启分页前，内存的访问流程</h2><ol>
+<h2 id="4-4-流水线相关知识"><a href="#4-4-流水线相关知识" class="headerlink" title="4.4 流水线相关知识"></a>4.4 流水线相关知识</h2><h3 id="4-4-1-什么叫做流水线"><a href="#4-4-1-什么叫做流水线" class="headerlink" title="4.4.1 什么叫做流水线"></a>4.4.1 什么叫做流水线</h3><p>举个简单的例子描述流水线：</p>
+<ol>
+<li>现在需要一直往墙上锤钉子，每锤一颗钉子，需要有两个步骤，第一步，取钉子，第二步，锤钉子</li>
+<li>如果只有一个人，那么只能不断地取，锤，取，锤，假设每个操作都花费1秒，那么一分钟只能锤30钉子。如果有两个人，完全并行操作，显然一分钟能锤30*2&#x3D;60个钉子。</li>
+<li>假设，一个人只能做一件事，不能既取钉子又锤钉子，就需要用到流水线的思想完成一个伪并行。</li>
+<li>第一秒，A取钉子，B什么都不干；第二秒，B把A取的钉子锤下去，A继续取下一个钉子；第三秒，B继续把A取的钉子锤下去，A继续取下一个钉子……以此类推，最后一分钟内可以锤59个钉子，之后的每一分钟都可以锤60个钉子，利用流水线完成了伪并行。</li>
+</ol>
+<p>CPU执行一条指令，需要经过三个步骤，这三个步骤可以理解为由三个部件来完成，分别是：取指（控制单元），译码（译码器），执行（指令执行单元EU）。<br>CPU中对时间的度量单位是时钟周期。</p>
+<p>CPU为了加快处理指令，也是采用流水线的方式执行。我们可以发现，流水线中区分的部分越多，各部分的时间越短，一定时间内完成的总任务量就越多，上述只是最原始的三级流水线，现在的CPU有的达到32级流水线。</p>
+<h3 id="4-4-2-jmp-dword-SELECTOR-CODE-p-mode-start指令的意义"><a href="#4-4-2-jmp-dword-SELECTOR-CODE-p-mode-start指令的意义" class="headerlink" title="4.4.2 jmp dword SELECTOR_CODE:p_mode_start指令的意义"></a>4.4.2 jmp dword SELECTOR_CODE:p_mode_start指令的意义</h3><p>我们来看实模式跳转到保护模式的部分代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs nasm">jmp dword SELECTOR_CODE:p_mode_start       <br>[bits 32]<br>p_mode_start: <br></code></pre></td></tr></table></figure>
+<p>明明顺序执行就可以，但还是加了<code>jmp dword SELECTOR_CODE:p_mode_start</code>这行代码，不会显得多余吗？原因如下：</p>
+<ol>
+<li>更新段描述符缓冲寄存器：32为CPU在实模式下不是变成了16位CPU，只是可以兼容16位的指令而已。例如，16位CPU访问内存时是把段基址左移4位+段内偏移地址形成的，而32位CPU在实模式下是把段基址左移4位后放到段描述符缓冲寄存器中，再用该寄存器的值与段内偏移地址相加得到结果，实模式下段描述符缓冲寄存器只有低20位有效，高16位为0，因此如果进入保护模式后，段描述符缓存寄存器的值肯定是错的，需要更新。</li>
+<li>由1可知，该行命令的SELECTOR_CODE被存入CS寄存器，可以将32位下正确的段描述符存入缓冲寄存器</li>
+<li>清空流水线：根据前述对流水线的描述，在CPU执行一个指令时，该指令后面的部分指令其实已经上了流水线了，因此在这个实模式到保护模式的分界点，就会出现一条流水线上既有16位指令又有32位指令的存在，会引起指令错误。因此可以通过jmp指令，完成刷新流水线的功能。</li>
+</ol>
+<h2 id="4-5-保护模式后，未开启分页前，内存的访问流程"><a href="#4-5-保护模式后，未开启分页前，内存的访问流程" class="headerlink" title="4.5 保护模式后，未开启分页前，内存的访问流程"></a>4.5 保护模式后，未开启分页前，内存的访问流程</h2><ol>
 <li>选择想要访问的段的选择子</li>
 <li>将选择子放入段寄存器中</li>
 <li>处理器检查TI，判断应该在gdtr中找到GDT还是ldtr中找到LDT进行索引</li>
