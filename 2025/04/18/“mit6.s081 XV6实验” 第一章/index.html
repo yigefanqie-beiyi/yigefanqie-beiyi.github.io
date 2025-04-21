@@ -29,8 +29,11 @@
 <meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.1.1.png">
 <meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.1.2.png">
 <meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.1.3.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.1.4.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.1.5.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.1.6.png">
 <meta property="article:published_time" content="2025-04-18T05:10:00.000Z">
-<meta property="article:modified_time" content="2025-04-19T08:48:12.889Z">
+<meta property="article:modified_time" content="2025-04-21T12:00:01.520Z">
 <meta property="article:author" content="Bei">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://yigefanqie-beiyi.github.io/img/xv6.1.1.png">
@@ -226,7 +229,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.1k 字
+          1.6k 字
         
       </span>
     
@@ -237,7 +240,7 @@
         
         
         
-          10 分钟
+          14 分钟
         
       </span>
     
@@ -315,6 +318,23 @@
 <p>系统调用函数都在kernel&#x2F;sysproc.c中存储，在里面我们可以看到</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs c">uint64<br><span class="hljs-title function_">sys_sleep</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>  <span class="hljs-type">int</span> n;<br>  uint ticks0;<br><br>  argint(<span class="hljs-number">0</span>, &amp;n);<br>  acquire(&amp;tickslock);<br>  ticks0 = ticks;<br>  <span class="hljs-keyword">while</span>(ticks - ticks0 &lt; n)&#123;<br>    <span class="hljs-keyword">if</span>(killed(myproc()))&#123;<br>      release(&amp;tickslock);<br>      <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>    &#125;<br>    sleep(&amp;ticks, &amp;tickslock);<br>  &#125;<br>  release(&amp;tickslock);<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>因此执行这个函数，可以完成<code>sleep 10</code>的效果，然后一步一步return，回到usys.S中ecall返回用户态，再执行ret回到shell。</p>
+<h1 id="pingpong-easy"><a href="#pingpong-easy" class="headerlink" title="pingpong(easy)"></a>pingpong(easy)</h1><p>原题如下：<br><img src="/../img/xv6.1.4.png" srcset="/img/loading.gif" lazyload></p>
+<p>分析题目：</p>
+<ol>
+<li>写一个类似UNIX系统调用的功能，在两个进程中”ping pong”一个字节通过一对管道pipe，父进程发送一个字节给子进程，子进程应该打印 “<pid>: received ping”，其中pid是子进程的pid，同时子进程应该发送一个字节给父进程，然后退出；父进程读取到子进程发送的字节后应该打印”<pid>: received pong”然后退出。</li>
+<li>解决方案应该写在user&#x2F;pingpong.c。</li>
+<li>使用pipe函数去创建一个pipe，使用fork函数创建一个子进程，使用read函数读取从pipe读取数据，使用write函数往pipe里写入数据</li>
+<li>使用getpid函数获得进程的pid</li>
+<li>在makefile中添加pingpong的文件编译条件</li>
+</ol>
+<p>思路：</p>
+<ol>
+<li>先阅读教材的1.2和1.3小节，熟悉文件描述符和pipes的概念，了解一些系统调用例如write和read的用法。</li>
+<li>利用子进程的exit和父进程的wait保证输出同步<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">char</span> *argv[])</span><br>&#123;<br>    <span class="hljs-keyword">if</span>(argc != <span class="hljs-number">1</span>)&#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;argument error\n&quot;</span>);<br>        <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);<br>    &#125;<br>    <span class="hljs-type">int</span> p[<span class="hljs-number">2</span>];<br>    <span class="hljs-type">char</span> buf[<span class="hljs-number">5</span>];<br>    pipe(p);<br>    <span class="hljs-type">int</span> pid  = fork();<br>    <span class="hljs-keyword">if</span>(pid == <span class="hljs-number">0</span>)&#123;<br>        <span class="hljs-comment">//子进程</span><br>        <span class="hljs-keyword">if</span>(read(p[<span class="hljs-number">0</span>], buf, <span class="hljs-number">4</span>))&#123;<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d: received %s\r\n&quot;</span>, getpid(), buf);<br>            write(p[<span class="hljs-number">1</span>], <span class="hljs-string">&quot;pong&quot;</span>, <span class="hljs-number">4</span>);<br>            close(p[<span class="hljs-number">1</span>]);<br>            close(p[<span class="hljs-number">0</span>]);<br>        &#125;<br>    &#125;<br>    <span class="hljs-keyword">else</span>&#123;<br>        <span class="hljs-comment">//父进程</span><br>        write(p[<span class="hljs-number">1</span>], <span class="hljs-string">&quot;ping&quot;</span>, <span class="hljs-number">4</span>);<br>        close(p[<span class="hljs-number">1</span>]);<br>        wait(<span class="hljs-number">0</span>);<br>        <span class="hljs-keyword">if</span>(read(p[<span class="hljs-number">0</span>], buf, <span class="hljs-number">4</span>))&#123;<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d: received pong\r\n&quot;</span>, getpid(), buf);<br>            close(p[<span class="hljs-number">0</span>]);<br>        &#125;<br>    &#125;<br>    <span class="hljs-built_in">exit</span>(<span class="hljs-number">0</span>);<br>&#125;<br></code></pre></td></tr></table></figure></li>
+</ol>
+<p>结果：<br><img src="/../img/xv6.1.5.png" srcset="/img/loading.gif" lazyload><br><img src="/../img/xv6.1.6.png" srcset="/img/loading.gif" lazyload></p>
+<p>要注意，想要通过实验的test需要保证输出和实验要求里一致，在做这一小节的实验时，因为把received误拼读成了reveived，导致我的test一直无法通过，找了半天的错误最后才发现是拼写问题</p>
+<p>网上有人是通过创建两个pipe，第一个pipe用来完成父进程向子进程传输数据，第二个pipe用来完成子进程向父进程传输数据，这样做我觉得复杂化了，其实利用exit和wait就能保证实验的效果</p>
 
                 
               </div>
