@@ -1,0 +1,747 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Bei">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="前期准备在开始这章实验前，需要阅读xv6 book的第三章，同时阅读kernel目录下的memlayout.h文件，vm.c文件，kalloc.c文件 页表  xv6运行在Sv39 RISC-V上，意思是64位虚拟地址只有低39位才被使用，高25位暂时没有使用；低39位中，高27位用来找到对应的PTEs，每个PTE占64位，但只用到了低54位，其中的低54位中，高44位用来表示物理地址页号(phy">
+<meta property="og:type" content="article">
+<meta property="og:title" content="“mit6.s081 XV6实验” Lab3 page tables">
+<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2025/04/30/%E2%80%9Cmit6.s081%20XV6%E5%AE%9E%E9%AA%8C%E2%80%9D%20%E7%AC%AC%E4%B8%89%E7%AB%A0/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="前期准备在开始这章实验前，需要阅读xv6 book的第三章，同时阅读kernel目录下的memlayout.h文件，vm.c文件，kalloc.c文件 页表  xv6运行在Sv39 RISC-V上，意思是64位虚拟地址只有低39位才被使用，高25位暂时没有使用；低39位中，高27位用来找到对应的PTEs，每个PTE占64位，但只用到了低54位，其中的低54位中，高44位用来表示物理地址页号(phy">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.3.1.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.3.2.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.3.3.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.3.4.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.3.5.png">
+<meta property="article:published_time" content="2025-04-30T02:10:00.000Z">
+<meta property="article:modified_time" content="2025-05-01T04:55:58.476Z">
+<meta property="article:author" content="Bei">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://yigefanqie-beiyi.github.io/img/xv6.3.1.png">
+  
+  
+  
+  <title>“mit6.s081 XV6实验” Lab3 page tables - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yigefanqie-beiyi.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":50,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Bei</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="“mit6.s081 XV6实验” Lab3 page tables"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-04-30 10:10" pubdate>
+          2025年4月30日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          21 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">“mit6.s081 XV6实验” Lab3 page tables</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="前期准备"><a href="#前期准备" class="headerlink" title="前期准备"></a>前期准备</h1><p>在开始这章实验前，需要阅读xv6 book的第三章，同时阅读kernel目录下的memlayout.h文件，vm.c文件，kalloc.c文件</p>
+<h2 id="页表"><a href="#页表" class="headerlink" title="页表"></a>页表</h2><p><img src="/../img/xv6.3.1.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>xv6运行在Sv39 RISC-V上，意思是64位虚拟地址只有低39位才被使用，高25位暂时没有使用；低39位中，高27位用来找到对应的PTEs，每个PTE占64位，但只用到了低54位，其中的低54位中，高44位用来表示物理地址页号(physical address number PPN)，低12位是一些标志位。</li>
+<li>xv6可寻址范围是2^39&#x3D;512GB</li>
+<li>一个页表以及一个页都是占4KB，一个页表项PTE占8B，因此一个页表有512个页表项</li>
+<li>xv6采用三级页表的方式映射内存，以上图所示，对于一个64位虚拟地址：<ul>
+<li>高25位EXT暂未使用</li>
+<li>首先在satp寄存器中存放了根目录物理地址</li>
+<li>9位可以表示512个下标，通过satp存储的根目录物理地址找到一级页表的位置，根据L2找到一级页表对应的PTE，通过该PTE的高44位PPN找到对应二级页表的物理地址</li>
+<li>通过上一步找到了二级页表的物理地址，再根据L1找到二级页表对应的PTE，通过该PTE的高44位PPN找到对应三级页表的物理地址</li>
+<li>通过上一步找到了三级页表的物理地址，再根据L0找到三级页表对应的PTE，通过该PTE的高44位PPN找到对应页的物理地址</li>
+<li>通过上一步找到了对应物理页，再根据虚拟地址低12位的Offest找到对应的字节(一个物理页占4KB，12位可表示的正好是4KB的大小)</li>
+</ul>
+</li>
+<li>三级页表的寻址有时候还是很麻烦，所以CPU会提供一个页表高速缓存TLB，加速虚拟地址到物理地址的转换，俗称快表</li>
+</ul>
+<h2 id="内核地址空间"><a href="#内核地址空间" class="headerlink" title="内核地址空间"></a>内核地址空间</h2><p><img src="/../img/xv6.3.2.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>xv6内核的地址空间采用直接映射，从0x80000000到0x88000000(PHYSTOP)，总共128MB</li>
+<li>还有trampoline页和内核栈映射到了内核的物理地址空间，但具体为什么要做这样的映射，这一节没有细讲</li>
+<li>trampoline页设置的标志位为PTE_R和PTE_X</li>
+</ul>
+<h1 id="内核页表启动前关于内核内存的init"><a href="#内核页表启动前关于内核内存的init" class="headerlink" title="内核页表启动前关于内核内存的init"></a>内核页表启动前关于内核内存的init</h1><p><img src="/../img/xv6.3.3.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="kinit，完成内核物理地址的分配-kalloc-c"><a href="#kinit，完成内核物理地址的分配-kalloc-c" class="headerlink" title="kinit，完成内核物理地址的分配(kalloc.c)"></a>kinit，完成内核物理地址的分配(kalloc.c)</h2><ul>
+<li>-&gt;调用initlock初始化kmem的锁</li>
+<li>-&gt;调用freerange对于每个可用的内核page，都调用kfree清空，并假如到kmem的空闲链表中，free的范围是内核数据代码段的结束地址之后一个字节到PHYSTOP<ul>
+<li>-&gt;将起始地址向上关于4KB取整</li>
+<li>-&gt;循环遍历每个page，调用kfree函数<ul>
+<li>-&gt;释放一个page，将此时的page作为空闲链表kmem.freelist的头部</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="kvminit，创建内核页表-vm-c"><a href="#kvminit，创建内核页表-vm-c" class="headerlink" title="kvminit，创建内核页表(vm.c)"></a>kvminit，创建内核页表(vm.c)</h2><ul>
+<li>执行<code>kernel_pagetable = kvmmake();</code>将创建好的内核根目录地址存入kernel_pagetable变量中<ul>
+<li>-&gt;调用kalloc函数从内核空闲链表中分配一个page给临时变量kpgtbl，<code>kpgtbl = (pagetable_t) kalloc();</code></li>
+<li>利用memset清空kpgtbl</li>
+<li>-&gt;调用kvmmap函数完成uart寄存器，disk接口，PLIC，内核代码段，内核数据段，内核可用内存，trampoline页的虚拟地址到物理地址的映射<ul>
+<li>-&gt;kvmmap函数本质是调用mappages函数完成映射，因此介绍kvmmap实际就是介绍mappages函数</li>
+<li>-&gt;mappages传入5个参数分别为页表地址pagetable，虚拟地址va，大小size，物理地址pa，设置映射页的标志位</li>
+<li>-&gt;将va向下关于4KB取整赋给a，将va向上关于4KB取整赋给last，因此要操作的范围就是a到last</li>
+<li>-&gt;在a到last中循环遍历每一页</li>
+<li>-&gt;调用walk函数，查找或者创建虚拟地址a对应的页表项，存入pte，注意这里walk的第三个参数要设为1<ul>
+<li>-&gt;walk函数传入三个参数，分别是pagetable，虚拟地址va，以及标志位alloc</li>
+<li>-&gt;当alloc为1时，如果在映射的过程中某一级页表不存在，则会调用kalloc分配一页作为该级页表</li>
+<li>-&gt;初始时pagetable是一级页表地址，通过PX(2,va)获得高9位，并在pagetable中找到对应的pte，通过PTE2PA获得该PTE对应的二级页表的物理地址，更新pagetable为二级页表的物理地址</li>
+<li>-&gt;通过PX(1,va)获得中9位，并在pagetable中找到对应的pte，通过PTE2PA获得该PTE对应的三级页表的物理地址，更新pagetable为三级页表的物理地址</li>
+<li>-&gt;<code>return &amp;pagetable[PX(0, va)]</code>返回三级页表中对应的pte</li>
+</ul>
+</li>
+<li>-&gt;如果页表项的PTE_V位已经置位，说明发生了重复映射，触发panic remmap</li>
+<li>-&gt;将物理地址pa与标志位perm，存在位PTE_V组合成一个PTE项赋给pte</li>
+<li>-&gt;继续循环迭代直到处理的page范围超过last</li>
+</ul>
+</li>
+<li>-&gt;调用proc_mapstacks函数为每个进程分配和映射内核栈，相当于是提前做映射，xv6中进程最大数量是确定的，这里提前分配了所有进程的内核栈<ul>
+<li>-&gt;调用宏<code>#define KSTACK(p) (TRAMPOLINE - (p)*2*PGSIZE - 3*PGSIZE)</code>，从内核顶部一路向下分配内核栈，每个内核栈占一页，同时还会有一页的未做映射的页作为保护页，防止栈溢出</li>
+<li>-&gt;这个宏要有-3*PGSIZE，是因为TRAMPOLINE-PGSIZE是TRAPFRAME，再-PGSIZE是USYSCALL，再-PGSIZE是第一个进程的内核栈</li>
+</ul>
+</li>
+<li>-&gt;返回kpgtbl</li>
+</ul>
+</li>
+</ul>
+<h2 id="kvminithart，打开分页机制"><a href="#kvminithart，打开分页机制" class="headerlink" title="kvminithart，打开分页机制"></a>kvminithart，打开分页机制</h2><ul>
+<li>刷新快表，防止旧的快表影响系统</li>
+<li>加载satp寄存器，启动分页机制</li>
+<li>再次刷新快表</li>
+</ul>
+<h2 id="整个内核内存空间设计和页表启动流程总结"><a href="#整个内核内存空间设计和页表启动流程总结" class="headerlink" title="整个内核内存空间设计和页表启动流程总结"></a>整个内核内存空间设计和页表启动流程总结</h2><ul>
+<li>整体的内核是加载到物理内存地址为0x8000000处执行的(2GB),设置内核的大小不超过128MB，因此PHYSTOP设置为了2GB+128MB</li>
+<li>调用kinit函数，将内核本身大小之后 到 PHYSTOP之间的空间设为内核空间，并添加到kmem的空闲链表中</li>
+<li>注意，此时没有启动页表，所有操作都是直接操作物理地址，因此kmem.freelist存储的都是物理地址</li>
+<li>调用kalloc分配一页物理地址，作为一级页表</li>
+<li>完成一级页表中，内核空间的各个直接映射</li>
+<li>调用kvminitart打开分页机制</li>
+<li>不用纠结各个地方是虚拟地址还是物理地址，因为是直接映射</li>
+</ul>
+<p>有一个困扰我很久的点，就是找到了PTE后，对应中间44位的地址是下一级页表的地址，那么这个地址到底是虚拟地址还是物理地址，书上说是虚拟地址，可是打开页表机制后，对内存的访问不就是要完成虚拟地址到物理地址的映射吗，就算是对页表的查询，本质也是要访问内存，那这44位应该是作为虚拟地址被访问的才对<br>想了很久，有两种解释：</p>
+<ol>
+<li>对于其他的地址访问，肯定是虚拟地址，但对于页表查询这种中间44位的内存访问，因为属于页表机制，所以risc-v会自动识别为物理地址</li>
+<li>或者说，对于页表查询这种中间44位的内存访问，说是虚拟地址或者物理地址都可以，因为页表肯定在内核里，内核是direct map的，所以两者相等</li>
+</ol>
+<p>目前还没找到具体这两种解释哪个是对的，但我认为应该是第二种，并且虽然两者相等，但中间44位应该作为虚拟地址</p>
+<h1 id="Speed-up-system-calls-easy"><a href="#Speed-up-system-calls-easy" class="headerlink" title="Speed up system calls (easy)"></a>Speed up system calls (easy)</h1><p>原题：<br><img src="/../img/xv6.3.4.png" srcset="/img/loading.gif" lazyload></p>
+<p>题目分析：</p>
+<ol>
+<li>os会利用在用户空间和内核空间共享一些只读区域，完成对一些系统调用的加速，减少系统调用中跨越内核的需要，根据这个原理，尝试修改getpid系统调用</li>
+<li>在创建每个进程时，都映射一个只读页在USYSCALL上，在memlayout.h中定义，同时放一个结构体struct usyscall在这一页，并初始化</li>
+<li>用户程序ugetpid已经写好</li>
+<li>在proc.c的proc_pagetable函数中完成mapping</li>
+<li>要记得设置只读位</li>
+<li>利用mappages函数</li>
+<li>不要忘了完成页的初始化和分配在allocproc函数中</li>
+<li>确保在freeproc中这一页被正确释放</li>
+</ol>
+<p>解题思路：</p>
+<ol>
+<li>先打开memlayout.h，可以看到内核虚拟地址从上到下的前三页被设计成了TRAMPOLINE，TRAPFRAME，USYSCALL；前两页都已经有映射，那么我们只需要模仿前两页，完成USYSCALL的映射就行<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> TRAPFRAME (TRAMPOLINE - PGSIZE)</span><br><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> LAB_PGTBL</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> USYSCALL (TRAPFRAME - PGSIZE)</span><br></code></pre></td></tr></table></figure></li>
+<li>首先需要在proc结构体中加入<code>struct usyscall *usyscall;</code>定义，因为是所有进程都要利用SYSCALL这一页进行一些只读操作的加速，因此每个进程体都拥有一个元素去处理这一页的数据会方便操作</li>
+<li>在proc.c的allocproc函数中，加入代码，分配一个内核物理页存入进程的usyscall指针中<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span>((p-&gt;usyscall = (<span class="hljs-keyword">struct</span> usyscall *)kalloc()) == <span class="hljs-number">0</span>)&#123;<br>  <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;alloc usyscall page fail!\n&quot;</span>);<br>  freeproc(p);<br>  release(&amp;p-&gt;lock);<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure></li>
+<li>直接将进程的pid同时写入这一页(！！为什么可以直接通过指针操作？因为是在内核空间，内核是直接映射的)<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">p-&gt;usyscall-&gt;pid = p-&gt;pid;<br></code></pre></td></tr></table></figure></li>
+<li>完成虚拟地址USYSCALL到物理地址(uint64)(p-&gt;usyscall)的映射，这里关键点：标志位一定要记得设置PTE_U！因为这是要用户态也能访问的页<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span> (mappages(pagetable, USYSCALL, PGSIZE,<br>             (uint64)(p-&gt;usyscall), PTE_R | PTE_U) &lt; <span class="hljs-number">0</span>)<br>&#123;<br>  uvmunmap(pagetable, USYSCALL, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>);<br>  uvmfree(pagetable, <span class="hljs-number">0</span>);<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure></li>
+<li>在freeproc函数里，也要记得添加释放USYSCALL页的操作，不然就会出现内存泄漏了<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span><br><span class="hljs-title function_">freeproc</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> proc *p)</span><br>&#123;<br>  <span class="hljs-keyword">if</span>(p-&gt;trapframe)<br>    kfree((<span class="hljs-type">void</span>*)p-&gt;trapframe);<br>  p-&gt;trapframe = <span class="hljs-number">0</span>;<br>  <span class="hljs-keyword">if</span>(p-&gt;usyscall)<br>    kfree((<span class="hljs-type">void</span>*)p-&gt;usyscall);<br>  p-&gt;usyscall = <span class="hljs-number">0</span>;<br>  <span class="hljs-keyword">if</span>(p-&gt;pagetable)<br>    proc_freepagetable(p-&gt;pagetable, p-&gt;sz);<br>  p-&gt;pagetable = <span class="hljs-number">0</span>;<br>  p-&gt;sz = <span class="hljs-number">0</span>;<br>  p-&gt;pid = <span class="hljs-number">0</span>;<br>  p-&gt;parent = <span class="hljs-number">0</span>;<br>  p-&gt;name[<span class="hljs-number">0</span>] = <span class="hljs-number">0</span>;<br>  p-&gt;chan = <span class="hljs-number">0</span>;<br>  p-&gt;killed = <span class="hljs-number">0</span>;<br>  p-&gt;xstate = <span class="hljs-number">0</span>;<br>  p-&gt;state = UNUSED;<br>&#125;<br></code></pre></td></tr></table></figure></li>
+</ol>
+<p>结果输出：<br><img src="/../img/xv6.3.5.png" srcset="/img/loading.gif" lazyload></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Xv6-Lab/" class="category-chain-item">Xv6 Lab</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>“mit6.s081 XV6实验” Lab3 page tables</div>
+      <div>https://yigefanqie-beiyi.github.io/2025/04/30/“mit6.s081 XV6实验” 第三章/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Bei</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年4月30日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/04/25/%E2%80%9Cmit6.s081%20XV6%E5%AE%9E%E9%AA%8C%E2%80%9D%20%E7%AC%AC%E4%BA%8C%E7%AB%A0/" title="“mit6.s081 XV6实验” Lab2 system calls">
+                        <span class="hidden-mobile">“mit6.s081 XV6实验” Lab2 system calls</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <span>Yi</span> <i class="iconfont icon-love"></i> <span>Yi</span> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

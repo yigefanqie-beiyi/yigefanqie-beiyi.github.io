@@ -1,0 +1,820 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Bei">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Using gdb(easy)这个小实验就是教学gdb调试的入门，这里总结一点经验：  在ubuntu上要用gdb-multiarch，好像用不了教学官网提到的riscv64-unknown-elf-gdb 要开两个控制台，一个运行make qemu-gdb&#39; 另一个运行gdb-multiarch，并绑定端口25000，同时打开file kernel&#x2F;kernel&#96; 为了">
+<meta property="og:type" content="article">
+<meta property="og:title" content="“mit6.s081 XV6实验” Lab2 system calls">
+<meta property="og:url" content="https://yigefanqie-beiyi.github.io/2025/04/25/%E2%80%9Cmit6.s081%20XV6%E5%AE%9E%E9%AA%8C%E2%80%9D%20%E7%AC%AC%E4%BA%8C%E7%AB%A0/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Using gdb(easy)这个小实验就是教学gdb调试的入门，这里总结一点经验：  在ubuntu上要用gdb-multiarch，好像用不了教学官网提到的riscv64-unknown-elf-gdb 要开两个控制台，一个运行make qemu-gdb&#39; 另一个运行gdb-multiarch，并绑定端口25000，同时打开file kernel&#x2F;kernel&#96; 为了">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.2.1.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.2.2.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.2.3.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.2.4.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.2.5.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.2.6.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.2.7.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.2.8.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.2.9.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.2.10.png">
+<meta property="article:published_time" content="2025-04-25T05:10:00.000Z">
+<meta property="article:modified_time" content="2025-05-01T04:55:52.952Z">
+<meta property="article:author" content="Bei">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://yigefanqie-beiyi.github.io/img/xv6.2.1.png">
+  
+  
+  
+  <title>“mit6.s081 XV6实验” Lab2 system calls - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yigefanqie-beiyi.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":50,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Bei</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="“mit6.s081 XV6实验” Lab2 system calls"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-04-25 13:10" pubdate>
+          2025年4月25日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          21 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">“mit6.s081 XV6实验” Lab2 system calls</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="Using-gdb-easy"><a href="#Using-gdb-easy" class="headerlink" title="Using gdb(easy)"></a>Using gdb(easy)</h1><p>这个小实验就是教学gdb调试的入门，这里总结一点经验：</p>
+<ol>
+<li>在ubuntu上要用gdb-multiarch，好像用不了教学官网提到的riscv64-unknown-elf-gdb</li>
+<li>要开两个控制台，一个运行<code>make qemu-gdb&#39; 另一个运行</code>gdb-multiarch<code>，并绑定端口25000，同时打开</code>file kernel&#x2F;kernel&#96;<br><img src="/../img/xv6.2.1.png" srcset="/img/loading.gif" lazyload></li>
+<li>为了避免每次打开都要手动绑定架构，绑定监测的端口，并打开可执行文件，直接在初始化文件中写命令在初始化时完成这些操作<br><code>vim ~/.gdbinit</code><br><img src="/../img/xv6.2.2.png" srcset="/img/loading.gif" lazyload></li>
+<li>执行<code>b syscall</code>，在syscall函数调用处打断点，执行<code>c</code>单步执行<br><img src="/../img/xv6.2.3.png" srcset="/img/loading.gif" lazyload></li>
+<li>执行<code>layout src</code>将屏幕分为上下两个部分，上面可以看源码，下面是控制台，执行<code>backtrace</code>或者<code>bt</code>可以看此时函数的调用栈帧<br><img src="/../img/xv6.2.4.png" srcset="/img/loading.gif" lazyload></li>
+<li>问题：Looking at the backtrace output, which function called syscall?</li>
+</ol>
+<ul>
+<li>从bt命令中可以看出是usertrap()函数调用的syscall</li>
+</ul>
+<ol start="7">
+<li>问题：What is the value of p-&gt;trapframe-&gt;a7 and what does that value represent? (Hint: look user&#x2F;initcode.S, the first user program xv6 starts.</li>
+</ol>
+<ul>
+<li>利用&#96;p &#x2F;x *p-&gt;trapframe’可以看出a7寄存器里存的数值是7</li>
+</ul>
+<ol start="8">
+<li>问题：What was the previous mode that the CPU was in?</li>
+</ol>
+<ul>
+<li>值是0x22，说明trap前的模式为用户模式</li>
+</ul>
+<h1 id="x86与riscv关于特权级，系统调用，中断，内存的区别"><a href="#x86与riscv关于特权级，系统调用，中断，内存的区别" class="headerlink" title="x86与riscv关于特权级，系统调用，中断，内存的区别"></a>x86与riscv关于特权级，系统调用，中断，内存的区别</h1><p>RISC-V 架构下的用户模式（User Mode）和监督模式（Supervisor Mode）与 x86 架构下的特权级 3（Ring 3）和特权级 0（Ring 0）在概念上非常相似<br><strong>(1)特权级设计</strong></p>
+<ul>
+<li>x86架构：<ul>
+<li>x86 使用 4 个特权级（Ring 0 到 Ring 3），但通常只使用 Ring 0（内核）和 Ring 3（用户程序）。</li>
+<li>Ring 1 和 Ring 2 很少使用，通常被保留给驱动程序或中间层软件。</li>
+</ul>
+</li>
+<li>RISC-V架构：<ul>
+<li>RISC-V 的设计更简洁，通常只定义了 3 种模式：</li>
+</ul>
+<ol>
+<li>用户模式（User Mode，U）：运行用户程序。</li>
+<li>监督模式（Supervisor Mode，S）：运行操作系统内核。</li>
+<li>机器模式（Machine Mode，M）：运行固件或引导程序，权限最高。</li>
+</ol>
+<ul>
+<li>没有类似 x86 的中间特权级（Ring 1 和 Ring 2）。<br><strong>(2)系统调用机制</strong></li>
+</ul>
+</li>
+<li>x86架构：<ul>
+<li>使用 int 指令（如 int 0x80）或更高效的 syscall&#x2F;sysret 指令来实现系统调用。</li>
+<li>系统调用会从 Ring 3 切换到 Ring 0。</li>
+</ul>
+</li>
+<li>RISC-V架构：<ul>
+<li>使用 ecall 指令发起系统调用。</li>
+<li>系统调用会从用户模式（U）切换到监督模式（S）。<br><strong>(3)中断和异常处理</strong></li>
+</ul>
+</li>
+<li>x86架构：<ul>
+<li>中断和异常处理通过中断描述符表（IDT）实现，IDT 包含每个中断或异常的处理程序入口。</li>
+<li>CPU 会根据中断向量号查找 IDT 中的对应条目。</li>
+</ul>
+</li>
+<li>RISC-V架构：<ul>
+<li>中断和异常处理通过陷入向量表（Trap Vector Table）实现。</li>
+<li>RISC-V 的陷入机制更简洁，直接跳转到指定的陷入处理程序。<br><strong>(4)内存管理</strong></li>
+</ul>
+</li>
+<li>x86架构：<ul>
+<li>使用段式内存管理（Segmentation）和分页（Paging）结合的方式</li>
+<li>虽然现代操作系统通常只使用分页，但段寄存器（如 cs、ds）仍然存在。</li>
+</ul>
+</li>
+<li>RISC-V架构：<ul>
+<li>仅支持分页（Paging），没有段式内存管理。</li>
+<li>页表的设计更灵活，支持多级页表（如 Sv39、Sv48）。</li>
+</ul>
+</li>
+</ul>
+<h1 id="RISC-V-中的-scause、sepc-和-stval-寄存器作用"><a href="#RISC-V-中的-scause、sepc-和-stval-寄存器作用" class="headerlink" title="RISC-V 中的 scause、sepc 和 stval 寄存器作用"></a>RISC-V 中的 <code>scause</code>、<code>sepc</code> 和 <code>stval</code> 寄存器作用</h1><p><strong>1. <code>scause</code>（Supervisor Cause Register）</strong></p>
+<ul>
+<li><strong>作用</strong>：记录导致陷入（Trap）的原因，包括中断或异常的类型。</li>
+<li><strong>关键字段</strong>：<ul>
+<li><strong>位 63（Interrupt 位）</strong>：<ul>
+<li>如果为 <code>1</code>，表示陷入是由中断引起的。</li>
+<li>如果为 <code>0</code>，表示陷入是由异常引起的。</li>
+</ul>
+</li>
+<li><strong>位 0-62（Exception Code 或 Interrupt Code）</strong>：<ul>
+<li>如果是中断，表示中断的类型（如外部中断、定时器中断等）。</li>
+<li>如果是异常，表示异常的类型（如非法指令、页错误等）。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>用途</strong>：<ul>
+<li>操作系统通过读取 <code>scause</code>，确定陷入的具体原因，并跳转到相应的中断或异常处理程序。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><strong>2. <code>sepc</code>（Supervisor Exception Program Counter Register）</strong></p>
+<ul>
+<li><strong>作用</strong>：保存发生异常或中断时的程序计数器（PC）的值。</li>
+<li><strong>用途</strong>：<ul>
+<li>当异常或中断处理完成后，操作系统可以通过 <code>sret</code> 指令将控制权返回到 <code>sepc</code> 指定的地址，继续执行被中断的程序。</li>
+<li>如果需要跳过导致异常的指令（如非法指令），操作系统可以修改 <code>sepc</code> 的值。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><strong>3. <code>stval</code>（Supervisor Trap Value Register）</strong></p>
+<ul>
+<li><strong>作用</strong>：保存与陷入相关的附加信息，具体内容取决于异常的类型。</li>
+<li><strong>用途</strong>：<ul>
+<li><strong>地址相关异常</strong>（如页错误）：<ul>
+<li><code>stval</code> 保存导致异常的虚拟地址。</li>
+</ul>
+</li>
+<li><strong>非法指令异常</strong>：<ul>
+<li><code>stval</code> 保存导致异常的非法指令编码。</li>
+</ul>
+</li>
+<li><strong>其他异常</strong>：<ul>
+<li>如果没有附加信息需要保存，<code>stval</code> 的值为 <code>0</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h1 id="System-call-tracing-moderate"><a href="#System-call-tracing-moderate" class="headerlink" title="System call tracing (moderate)"></a>System call tracing (moderate)</h1><p>题目分析：</p>
+<ol>
+<li>添加一个系统调用trace，用来跟踪当前进程的系统调用情况，接收一个参数mask，mask对应的第x个位置一，就说明系统调用号为x的系统调用被跟踪，在该系统调用即将返回时打印一行信息，内容包括进程ID，系统调用名称和返回值，同时，对于调用trace的进程所创建的所有子进程也需要进行跟踪，并保持mask不变。</li>
+<li>完成后的输出如下：<br><img src="/../img/xv6.2.5.png" srcset="/img/loading.gif" lazyload></li>
+<li>在makefile中添加$U&#x2F;_trace</li>
+<li>在用户空间user&#x2F;trace.c中存在已经存在了用户态的接口，但是直接make qemu无法通过编译，因为里面的trace函数还没定义，即要添加好系统调用的一系列接口。</li>
+<li>修改kernel&#x2F;proc.c中的fork函数，将mask从父进程复制到子进程</li>
+</ol>
+<p>解决思路：</p>
+<ol>
+<li>首先需要定义好添加一个系统调用的一系列接口，按照下列顺序添加“</li>
+</ol>
+<ul>
+<li>user&#x2F;trace.c中的trace函数没有声明，因此在user&#x2F;user.h中添加<code>int trace(int);</code>声明；</li>
+<li>在usys.pl中添加<code>entry(&quot;trace&quot;);</code>，该脚本文件可以帮助生成的usys.S文件中生成关键的汇编trace函数的代码，其实就是把系统调用号传入a7并执行ecall；</li>
+<li>在kernel&#x2F;syscall.c中的syscalls函数数组中添加sys_trace元素，以支持通过系统调用号SYS_trace找到对应的执行函数sys_trace；</li>
+<li>在kernel&#x2F;sysproc.c中加入sys_trace函数的定义；</li>
+</ul>
+<ol start="2">
+<li>mask传入后需要在整个进程的所有系统调用过程中都可见，因此应该是个全局变量，利用proc这个结构体，我们直接在进程控制体proc中新添加一个变量：<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// Per-process state</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">proc</span> &#123;</span><br>  ...<br>  uint64 mask;                 <span class="hljs-comment">// Trace mask</span><br>&#125;;<br></code></pre></td></tr></table></figure></li>
+<li>在sysproc.c的sys_trace函数中完成定义，由于用户态中<code>int trace(int)</code>只传入了一个参数就是mask，因此通过函数<code>argint</code>就可以在a0寄存器中获得传入的参数，并把该值赋给p-&gt;mask即可。<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c">uint64<br><span class="hljs-title function_">sys_trace</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>  <span class="hljs-type">int</span> mask = <span class="hljs-number">0</span>;<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">proc</span> *<span class="hljs-title">p</span> =</span> myproc();<br>  argint(<span class="hljs-number">0</span>, &amp;mask);<br>  p -&gt; mask = mask;<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure></li>
+<li>输出的跟踪信息，是在系统调用返回时才进行的，因此思路就是，在系统调用返回处的接口，加一个判断此时的系统调用是否是mask中设定好的，如果是的话就输出跟踪信息。系统调用的入口和返回口其实都是syscall.c的syscall函数，为了在输出时能够输出对应的名字，创建了一个新的静态数组完成名字的映射<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">char</span> name[<span class="hljs-number">30</span>][<span class="hljs-number">10</span>] = &#123;<br>  <span class="hljs-string">&quot;&quot;</span>,<br>  <span class="hljs-string">&quot;fork&quot;</span>,<br>  <span class="hljs-string">&quot;exit&quot;</span>,<br>  <span class="hljs-string">&quot;wait&quot;</span>,<br>  <span class="hljs-string">&quot;pipe&quot;</span>,<br>  <span class="hljs-string">&quot;read&quot;</span>,<br>  <span class="hljs-string">&quot;kill&quot;</span>,<br>  <span class="hljs-string">&quot;exec&quot;</span>,<br>  <span class="hljs-string">&quot;fstat&quot;</span>,<br>  <span class="hljs-string">&quot;chdir&quot;</span>,<br>  <span class="hljs-string">&quot;dup&quot;</span>,<br>  <span class="hljs-string">&quot;getpid&quot;</span>,<br>  <span class="hljs-string">&quot;sbrk&quot;</span>,<br>  <span class="hljs-string">&quot;sleep&quot;</span>,<br>  <span class="hljs-string">&quot;uptime&quot;</span>,<br>  <span class="hljs-string">&quot;open&quot;</span>,<br>  <span class="hljs-string">&quot;write&quot;</span>,<br>  <span class="hljs-string">&quot;mknod&quot;</span>,<br>  <span class="hljs-string">&quot;unlink&quot;</span>,<br>  <span class="hljs-string">&quot;link&quot;</span>,<br>  <span class="hljs-string">&quot;mkdir&quot;</span>,<br>  <span class="hljs-string">&quot;close&quot;</span>,<br>  <span class="hljs-string">&quot;trace&quot;</span>,<br>&#125;;<br><br><span class="hljs-type">void</span><br><span class="hljs-title function_">syscall</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>  <span class="hljs-type">int</span> num;<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">proc</span> *<span class="hljs-title">p</span> =</span> myproc();<br><br>  <span class="hljs-comment">//num = * (int *) 0; </span><br>  num = p-&gt;trapframe-&gt;a7;<br>  <span class="hljs-keyword">if</span>(num &gt; <span class="hljs-number">0</span> &amp;&amp; num &lt; NELEM(syscalls) &amp;&amp; syscalls[num]) &#123;<br>    <span class="hljs-comment">// Use num to lookup the system call function for num, call it,</span><br>    <span class="hljs-comment">// and store its return value in p-&gt;trapframe-&gt;a0</span><br>    p-&gt;trapframe-&gt;a0 = syscalls[num]();<br>    <span class="hljs-keyword">if</span>(p -&gt; mask &amp; (<span class="hljs-number">1</span> &lt;&lt; num)) <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d: syscall %s -&gt; %d\n&quot;</span>, p -&gt; pid, name[num], p-&gt;trapframe-&gt;a0);<br>  &#125; <span class="hljs-keyword">else</span> &#123;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d %s: unknown sys call %d\n&quot;</span>,<br>            p-&gt;pid, p-&gt;name, num);<br>    p-&gt;trapframe-&gt;a0 = <span class="hljs-number">-1</span>;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure></li>
+<li>为了将mask的有效值拷贝传递给每个子进程，需要修改fork函数<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span><br><span class="hljs-title function_">fork</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>  <span class="hljs-type">int</span> i, pid;<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">proc</span> *<span class="hljs-title">np</span>;</span><br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">proc</span> *<span class="hljs-title">p</span> =</span> myproc();<br><br>  <span class="hljs-comment">// Allocate process.</span><br>  <span class="hljs-keyword">if</span>((np = allocproc()) == <span class="hljs-number">0</span>)&#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  &#125;<br><br>  np -&gt; mask = p -&gt; mask;<br>  ...<br>&#125;<br></code></pre></td></tr></table></figure></li>
+</ol>
+<p>测试结果：<br><img src="/../img/xv6.2.6.png" srcset="/img/loading.gif" lazyload><br><img src="/../img/xv6.2.7.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="Sysinfo-moderate"><a href="#Sysinfo-moderate" class="headerlink" title="Sysinfo (moderate)"></a>Sysinfo (moderate)</h1><p>原题如下：<br><img src="/../img/xv6.2.8.png" srcset="/img/loading.gif" lazyload></p>
+<p>题目分析：</p>
+<ol>
+<li>程序中已经存在了sysinfotest.c这个文件，稍微看了一下，没必要研究里面的程序，只需要知道是用来测试的就行。</li>
+<li>需要在makefile里面添加<code> $U/_sysinfotest</code>，运行<code>make qemu</code>会出现编译错误，是因为没有添加系统调用sysinfo的接口，因此需要添加sysinfo系统调用的接口</li>
+<li>sysinfo中需要将struct sysinfo复制回用户空间，参考sys_fstat() （ kernel&#x2F;sysfile.c ）和 filestat() （ kernel&#x2F;file.c ）中如何使用 copyout() 来完成此操作的示例。</li>
+<li>在kernel&#x2F;kalloc.c中添加一个函数，收集空闲内存的大小</li>
+<li>在kernel&#x2F;proc.c中添加一个函数，收集进程数量</li>
+</ol>
+<p>解决思路：</p>
+<ol>
+<li>首先需要解决编译问题，还是老样子需要添加系统调用的一系列接口，具体参考之前的实验</li>
+<li>在user&#x2F;user.h中要声明sysinfo()的原型，需要预先声明struct sysinfo的存在<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">sysinfo</span>;</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">sysinfo</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> sysinfo *)</span>;<br></code></pre></td></tr></table></figure></li>
+<li>sysinfo系统调用接收一个参数struct sysinfo，通过sysinfo系统调用将系统信息填入传入的参数，因此需要利用copyout函数将struct sysinfo复制回用户空间</li>
+<li>阅读kernel&#x2F;kalloc.c，可以发现有一个全局变量kmem，里面的freelist元素是个链表，以链表的形式存储空闲节点的数量，每个节点映射为4KB的内存，因此可以遍历这个链表，统计节点的数量<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c">uint64 <span class="hljs-title function_">getfreemem</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>&#123;<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">run</span> *<span class="hljs-title">r</span>;</span><br>  r = kmem.freelist;<br>  uint64 count = <span class="hljs-number">0</span>;<br>  acquire(&amp;kmem.lock);<br>  <span class="hljs-keyword">while</span>(r)&#123;<br>    count++;<br>    r = r -&gt; next;<br>  &#125;<br>  release(&amp;kmem.lock);<br>  <span class="hljs-keyword">return</span> (count * <span class="hljs-number">4096</span>);<br>&#125;<br></code></pre></td></tr></table></figure></li>
+<li>阅读kernel&#x2F;proc.c，发现有一个proc数组，里面存储了当前所有进程，通过遍历数组每个元素的状态判断是不是UNUSED，获取当前进程的数量<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c">uint64 <span class="hljs-title function_">getnproc</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>&#123;<br>  uint count = <span class="hljs-number">0</span>;<br>  <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; NPROC; i++)&#123;<br>    <span class="hljs-keyword">if</span>(proc[i].state != UNUSED)&#123;<br>      count++;<br>    &#125;<br>  &#125;<br>  <span class="hljs-keyword">return</span> count;<br>&#125;<br></code></pre></td></tr></table></figure></li>
+<li>最终代码如下：<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c">uint64<br><span class="hljs-title function_">sys_sysinfo</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">proc</span> *<span class="hljs-title">p</span> =</span> myproc();<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">sysinfo</span> <span class="hljs-title">si</span>;</span><br>  si.freemem = getfreemem();<br>  si.nproc = getnproc();<br>  uint64 addr;<br>  argaddr(<span class="hljs-number">0</span>, &amp;addr);<br>  <span class="hljs-keyword">if</span>(copyout(p-&gt;pagetable, addr, (<span class="hljs-type">char</span> *)&amp;si, <span class="hljs-keyword">sizeof</span>(si)) &lt; <span class="hljs-number">0</span>)  <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure></li>
+</ol>
+<p>运行结果：<br><img src="/../img/xv6.2.9.png" srcset="/img/loading.gif" lazyload><br><img src="/../img/xv6.2.10.png" srcset="/img/loading.gif" lazyload></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Xv6-Lab/" class="category-chain-item">Xv6 Lab</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>“mit6.s081 XV6实验” Lab2 system calls</div>
+      <div>https://yigefanqie-beiyi.github.io/2025/04/25/“mit6.s081 XV6实验” 第二章/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Bei</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年4月25日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/04/30/%E2%80%9Cmit6.s081%20XV6%E5%AE%9E%E9%AA%8C%E2%80%9D%20%E7%AC%AC%E4%B8%89%E7%AB%A0/" title="“mit6.s081 XV6实验” Lab3 page tables">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">“mit6.s081 XV6实验” Lab3 page tables</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/04/18/%E2%80%9Cmit6.s081%20XV6%E5%AE%9E%E9%AA%8C%E2%80%9D%20%E7%AC%AC%E4%B8%80%E7%AB%A0/" title="“mit6.s081 XV6实验” Lab1 Xv6 and Unix utilities">
+                        <span class="hidden-mobile">“mit6.s081 XV6实验” Lab1 Xv6 and Unix utilities</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <span>Yi</span> <i class="iconfont icon-love"></i> <span>Yi</span> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
