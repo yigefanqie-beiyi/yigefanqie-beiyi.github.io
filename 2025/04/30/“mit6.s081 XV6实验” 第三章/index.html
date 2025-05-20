@@ -31,8 +31,13 @@
 <meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.3.3.png">
 <meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.3.4.png">
 <meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.3.5.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.3.6.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.3.7.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.3.78.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.3.9.png">
+<meta property="og:image" content="https://yigefanqie-beiyi.github.io/img/xv6.3.10.png">
 <meta property="article:published_time" content="2025-04-30T02:10:00.000Z">
-<meta property="article:modified_time" content="2025-05-01T04:55:58.476Z">
+<meta property="article:modified_time" content="2025-05-01T09:43:02.761Z">
 <meta property="article:author" content="Bei">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://yigefanqie-beiyi.github.io/img/xv6.3.1.png">
@@ -228,7 +233,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.5k 字
+          3.6k 字
         
       </span>
     
@@ -239,7 +244,7 @@
         
         
         
-          21 分钟
+          30 分钟
         
       </span>
     
@@ -303,6 +308,7 @@
 <li>xv6内核的地址空间采用直接映射，从0x80000000到0x88000000(PHYSTOP)，总共128MB</li>
 <li>还有trampoline页和内核栈映射到了内核的物理地址空间，但具体为什么要做这样的映射，这一节没有细讲</li>
 <li>trampoline页设置的标志位为PTE_R和PTE_X</li>
+<li>和之前做的基于x86的myos搭建不一样，这里对于物理内存并没有划分内核物理内存池和用户物理内存池，而是直接用户内核可用物理内存统一用了从0x80000000到0x88000000(PHYSTOP)</li>
 </ul>
 <h1 id="内核页表启动前关于内核内存的init"><a href="#内核页表启动前关于内核内存的init" class="headerlink" title="内核页表启动前关于内核内存的init"></a>内核页表启动前关于内核内存的init</h1><p><img src="/../img/xv6.3.3.png" srcset="/img/loading.gif" lazyload></p>
 <h2 id="kinit，完成内核物理地址的分配-kalloc-c"><a href="#kinit，完成内核物理地址的分配-kalloc-c" class="headerlink" title="kinit，完成内核物理地址的分配(kalloc.c)"></a>kinit，完成内核物理地址的分配(kalloc.c)</h2><ul>
@@ -389,6 +395,51 @@
 <li>在freeproc函数里，也要记得添加释放USYSCALL页的操作，不然就会出现内存泄漏了<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">void</span><br><span class="hljs-title function_">freeproc</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> proc *p)</span><br>&#123;<br>  <span class="hljs-keyword">if</span>(p-&gt;trapframe)<br>    kfree((<span class="hljs-type">void</span>*)p-&gt;trapframe);<br>  p-&gt;trapframe = <span class="hljs-number">0</span>;<br>  <span class="hljs-keyword">if</span>(p-&gt;usyscall)<br>    kfree((<span class="hljs-type">void</span>*)p-&gt;usyscall);<br>  p-&gt;usyscall = <span class="hljs-number">0</span>;<br>  <span class="hljs-keyword">if</span>(p-&gt;pagetable)<br>    proc_freepagetable(p-&gt;pagetable, p-&gt;sz);<br>  p-&gt;pagetable = <span class="hljs-number">0</span>;<br>  p-&gt;sz = <span class="hljs-number">0</span>;<br>  p-&gt;pid = <span class="hljs-number">0</span>;<br>  p-&gt;parent = <span class="hljs-number">0</span>;<br>  p-&gt;name[<span class="hljs-number">0</span>] = <span class="hljs-number">0</span>;<br>  p-&gt;chan = <span class="hljs-number">0</span>;<br>  p-&gt;killed = <span class="hljs-number">0</span>;<br>  p-&gt;xstate = <span class="hljs-number">0</span>;<br>  p-&gt;state = UNUSED;<br>&#125;<br></code></pre></td></tr></table></figure></li>
 </ol>
 <p>结果输出：<br><img src="/../img/xv6.3.5.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="Print-a-page-table-easy"><a href="#Print-a-page-table-easy" class="headerlink" title="Print a page table (easy)"></a>Print a page table (easy)</h1><p>原题如下：<br><img src="/../img/xv6.3.6.png" srcset="/img/loading.gif" lazyload></p>
+<p>题目分析：</p>
+<ol>
+<li>编写一个功能，可以打印当前页表的内容</li>
+<li>定义一个函数vmprint()，接收一个pagetable_t类型的参数，并且按照上图格式打印信息，第一行打印接收的参数，之后的每个pte行，打印页表树的深度(用..表示一层深度)，pte的对应index，pte的值，从pte中提取的物理地址pa的值。</li>
+<li>在exec.c的<code>return argc</code>前插入<code>if(p-&gt;pid==1) vmprint(p-&gt;pagetable)</code>，这样在xv6启动时会打印第一个进程的页表</li>
+<li>可以在kernel&#x2F;vm.c中写vmprint函数</li>
+<li>使用kernel&#x2F;riscv.h末尾的宏</li>
+<li>阅读freewalk函数，可能会带来灵感</li>
+<li>定义vmprint的原型在kernel&#x2F;defs.h中，以在exec.c中可以调用</li>
+<li>要用到printf函数，使用%p来打印64bit的十六进制数</li>
+</ol>
+<p>解决思路：</p>
+<ol>
+<li>稍微小改了一下，因为想要直接通过一个函数就递归遍历，所以加了个参数depth，函数原型变成<code>void vmprint(pagetable_t pagetable, int depth)</code>，然后按照要求先设置好各个接口</li>
+<li>在exec.c的<code>return argc</code>前插入<code>if(p-&gt;pid==1) vmprint(p-&gt;pagetable， 0)</code>，在kernel&#x2F;defs.h中完成函数声明</li>
+<li>其他没啥好说的，就写个递归算法<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">vmprint</span><span class="hljs-params">(<span class="hljs-type">pagetable_t</span> pagetable, <span class="hljs-type">int</span> depth)</span><br>&#123;<br>  <span class="hljs-keyword">if</span>(depth &lt; <span class="hljs-number">0</span> || depth &gt; <span class="hljs-number">2</span>) <span class="hljs-keyword">return</span>;<br>  <span class="hljs-comment">//首行打印传入的pagetable</span><br>  <span class="hljs-keyword">if</span>(depth == <span class="hljs-number">0</span>) <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;page table %p\n&quot;</span>, (uint64)pagetable);<br>  <span class="hljs-comment">//递归遍历</span><br>  <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">512</span>; i++)<br>  &#123;<br>    <span class="hljs-type">pte_t</span> pte = pagetable[i];<br>    <span class="hljs-keyword">if</span> (pte &amp; PTE_V)<br>    &#123;<br>      uint64 child = PTE2PA(pte);<br>      <span class="hljs-keyword">if</span>(depth == <span class="hljs-number">0</span>) <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;..&quot;</span>);<br>      <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(depth == <span class="hljs-number">1</span>) <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;.. ..&quot;</span>);<br>      <span class="hljs-keyword">else</span> <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;.. .. ..&quot;</span>);<br>      <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d: pte %p pa %p\n&quot;</span>, i, pte, child);<br>      vmprint((<span class="hljs-type">pagetable_t</span>)child, depth + <span class="hljs-number">1</span>);<br>    &#125;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure></li>
+</ol>
+<p>结果输出：<br><img src="/../img/xv6.3.7.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="Detect-which-pages-have-been-accessed-hard"><a href="#Detect-which-pages-have-been-accessed-hard" class="headerlink" title="Detect which pages have been accessed (hard)"></a>Detect which pages have been accessed (hard)</h1><p>原题如下：<br><img src="/../img/xv6.3.78.png" srcset="/img/loading.gif" lazyload></p>
+<p>题目分析：</p>
+<ol>
+<li>实现一个系统调用pgaccess，报告哪些pages被访问，接收三个参数，第一个用户page的起始虚拟地址，需要检查的page的数量，一个用户空间的buffer以位图的形式映射每一页是否有被访问</li>
+<li>阅读user&#x2F;pgtlbtest.c中和pgaccess有关的部分</li>
+<li>在sysproc.c中实现sys_pgaccess</li>
+<li>通过argaddr() 和 argint()传递参数</li>
+<li>利用copyout函数将内核的临时缓冲区的数复制到用户传入的buffer</li>
+<li>可以设置一个扫描页数的上限</li>
+<li>vm.c中的walk函数可以帮助找到正确的PTES</li>
+<li>在riscv.h中定义PTE_A</li>
+<li>检查PTE_A设置后，请务必清除PTE_A。否则，将无法确定自上次调用pgaccess（）以来是否访问了该页（即，该位将永远设置）。</li>
+<li>可以利用vmprint函数进行debug</li>
+</ol>
+<p>解决思路：</p>
+<ol>
+<li>查看<code>pgaccess_test</code>函数，发现里面已经写好了调用的代码，我们只要写好pgaccess这个系统调用即可</li>
+<li>可以知道，用户态的函数原型是<code>int pgaccess(void *base, int len, void *mask);</code>，因此要利用argaddr() 和 argint()在内核态接收参数</li>
+<li>根据用户传入的要检查的page的起始虚拟地址，通过walk函数找到对应的PTE</li>
+<li>要记得在riscv.h文件中添加<code>#define PTE_A (1L &lt;&lt; 6)</code></li>
+<li>要记得在检查完后清除PTE_A的标志位，这样才能在下一次检查的时候，获得最新的访问状态</li>
+<li>利用for循环就可以很简单的实现循环检查了，最后利用copyout函数复制mask回用户空间<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span><br><span class="hljs-title function_">sys_pgaccess</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>  <span class="hljs-comment">// lab pgtbl: your code here.</span><br>  uint64 base, mask_user;<br>  uint64 mask_kernel = <span class="hljs-number">0</span>;<br>  <span class="hljs-type">int</span> len;<br>  argaddr(<span class="hljs-number">0</span>, &amp;base);<br>  argint(<span class="hljs-number">1</span>, &amp;len);<br>  argaddr(<span class="hljs-number">2</span>, &amp;mask_user);<br>  <span class="hljs-keyword">if</span>(len &gt; <span class="hljs-number">64</span>) <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">proc</span> *<span class="hljs-title">p</span> =</span> myproc();<br>  <span class="hljs-type">pte_t</span> *pte;<br>  <span class="hljs-keyword">if</span>((pte = walk(p-&gt;pagetable, base, <span class="hljs-number">0</span>)) == <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  <span class="hljs-comment">//循环检查</span><br>  <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; len; i++)&#123;<br>    <span class="hljs-keyword">if</span>(*pte &amp; PTE_A)&#123;<br>      mask_kernel |= (<span class="hljs-number">1</span> &lt;&lt; i);<br>    &#125;<br>    *pte &amp;= ~PTE_A;<br>    pte++;<br>  &#125;<br>  <span class="hljs-comment">//利用copyout复制回用户空间</span><br>  <span class="hljs-keyword">if</span>(copyout(p-&gt;pagetable, mask_user, (<span class="hljs-type">char</span>*)&amp;mask_kernel, <span class="hljs-keyword">sizeof</span>(uint64)) &lt; <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure></li>
+</ol>
+<p>调试过程中，出现了Page Fault错误，利用gdb调试检查，发现是运行到copyout函数时，gdb提示传入的源地址参数是0x01，检查后发现问题是一开始我的函数调用写成了<code>copyout(p-&gt;pagetable, mask_user, (char*)mask_kernel, sizeof(uint64))</code>，但起始mask_kernel是uint64类型的数据，传入的参数应该是char<em>，应该把mask_kernel的地址转为char</em>而不是mask_kernel的值转为char*，修改为<code>copyout(p-&gt;pagetable, mask_user, (char*)&amp;mask_kernel, sizeof(uint64))</code>后问题解决</p>
+<p>结果输出：<br><img src="/../img/xv6.3.9.png" srcset="/img/loading.gif" lazyload></p>
+<p>对整个Lab3执行make grade<br><img src="/../img/xv6.3.10.png" srcset="/img/loading.gif" lazyload></p>
 
                 
               </div>
@@ -471,6 +522,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2025/05/02/%E2%80%9Cmit6.s081%20XV6%E5%AE%9E%E9%AA%8C%E2%80%9D%20%E7%AC%AC%E5%9B%9B%E7%AB%A0/" title="��mit6.s081 XV6ʵ�顱 Lab4 traps">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">��mit6.s081 XV6ʵ�顱 Lab4 traps</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
